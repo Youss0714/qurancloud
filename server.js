@@ -364,24 +364,24 @@ const server = http.createServer((req, res) => {
     .scroll-nav {
       position: fixed;
       right: 20px;
-      bottom: 20px;
+      bottom: 80px; /* Remonté pour éviter d'être caché par les contrôles du navigateur ou de Replit */
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
       z-index: 100;
     }
     .scroll-btn {
       background: white;
       color: var(--primary-color);
-      border: 1px solid #eee;
-      width: 45px;
-      height: 45px;
+      border: none;
+      width: 50px; /* Légèrement plus grand pour faciliter le clic sur mobile */
+      height: 50px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
       transition: all 0.2s;
     }
     .scroll-btn:hover {

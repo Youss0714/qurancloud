@@ -141,8 +141,7 @@ const server = http.createServer((req, res) => {
   
   if (url === '/') {
     res.writeHead(200, { 'Content-Type': 'text/html' });
-    res.end(`
-<!DOCTYPE html>
+    res.end(`<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
@@ -468,7 +467,7 @@ const server = http.createServer((req, res) => {
         </div>
       </div>
 
-      <div id="loading" class="loading"><i class="fas fa-spinner fa-spin"></i> جari التحميل...</div>
+      <div id="loading" class="loading"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</div>
       
       <div id="resultsArea">
         <div style="margin-top: 5rem;">
@@ -537,15 +536,15 @@ const server = http.createServer((req, res) => {
         if (!text) return "";
         return text
           .normalize("NFD")
-          .replace(/[\\u064B-\\u0652\\u0670\\u06E1\\u06D6-\\u06ED]/g, "")
-          .replace(/[\\u0671]/g, "ا")
+          .replace(/[\\\\u064B-\\\\u0652\\\\u0670\\\\u06E1\\\\u06D6-\\\\u06ED]/g, "")
+          .replace(/[\\\\u0671]/g, "ا")
           .replace(/[أإآ]/g, "ا")
           .replace(/ؤ/g, "و")
           .replace(/[ئى]/g, "ي")
           .replace(/ة/g, "ه")
           .replace(/ء/g, "")
-          .replace(/\\u0640/g, "")
-          .replace(/\\s+/g, " ")
+          .replace(/\\\\u0640/g, "")
+          .replace(/\\\\s+/g, " ")
           .trim();
       }
 
@@ -630,24 +629,9 @@ const server = http.createServer((req, res) => {
   </script>
 </body>
 </html>
-\`);
+`);
     return;
   }
-
-  let filePath = '.' + url;
-  if (!filePath.endsWith('.json') && !filePath.includes('.')) {
-    filePath = filePath + '.json';
-  }
-
-  fs.readFile(filePath, (err, data) => {
-    if (err) {
-      res.writeHead(404, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'File not found', path: req.url }));
-      return;
-    }
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(data);
-  });
 });
 
 server.listen(PORT, HOST, () => {

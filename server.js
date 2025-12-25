@@ -12,15 +12,14 @@ function normalize(text) {
   if (!text) return "";
   return text
     .normalize("NFD")
-    .replace(/[\u064B-\u0652\u0670\u06E1\u06D6-\u06ED]/g, "") // Diacritics
+    .replace(/[\u064B-\u0652\u0670\u06E1\u06D6-\u06ED]/g, "") // Suppression des diacritiques (Tashkeel)
     .replace(/[\u0671]/g, "ا") // Alif Wasla ٱ -> ا
-    .replace(/[أإآ]/g, "ا")
-    .replace(/ؤ/g, "و")
-    .replace(/ئ/g, "ي")
-    .replace(/ى/g, "ي")
-    .replace(/ة/g, "ه")
-    .replace(/ء/g, "")
-    .replace(/\u0640/g, "") // Tatweel
+    .replace(/[أإآ]/g, "ا") // Normalisation des Alifs
+    .replace(/ؤ/g, "و") // Normalisation Waw
+    .replace(/[ئى]/g, "ي") // Normalisation Ya et Ya Hamza
+    .replace(/ة/g, "ه") // Normalisation Ta Marbuta
+    .replace(/ء/g, "") // Suppression Hamza isolée
+    .replace(/\u0640/g, "") // Suppression Tatweel
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -395,8 +394,7 @@ const server = http.createServer((req, res) => {
           .replace(/[\\u0671]/g, "ا")
           .replace(/[أإآ]/g, "ا")
           .replace(/ؤ/g, "و")
-          .replace(/ئ/g, "ي")
-          .replace(/ى/g, "ي")
+          .replace(/[ئى]/g, "ي")
           .replace(/ة/g, "ه")
           .replace(/ء/g, "")
           .replace(/\\u0640/g, "")

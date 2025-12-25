@@ -14,20 +14,21 @@ function normalize(text) {
   if (!text) return "";
   return text
     .normalize("NFD")
-    .replace(/[\u064B-\u0652\u0670\u06E1\u06D6-\u06ED]/g, "")
-    .replace(/[\u0671]/g, "ا")
-    .replace(/[أإآ]/g, "ا")
-    .replace(/ؤ/g, "و")
-    .replace(/[ئى]/g, "ي")
-    .replace(/ة/g, "ه")
-    .replace(/ء/g, "")
-    .replace(/\u0640/g, "")
+    .replace(/[\u064B-\u0652\u0670\u06E1\u06D6-\u06ED]/g, "") // Suppression des diacritiques (Tashkeel)
+    .replace(/[\u0671]/g, "ا") // Alif Wasla ٱ -> ا
+    .replace(/[أإآ]/g, "ا") // Normalisation des Alifs
+    .replace(/ؤ/g, "و") // Normalisation Waw
+    .replace(/[ئى]/g, "ي") // Normalisation Ya et Ya Hamza
+    .replace(/ة/g, "ه") // Normalisation Ta Marbuta
+    .replace(/ء/g, "") // Suppression Hamza isolée
+    .replace(/\u0640/g, "") // Suppression Tatweel
     .replace(/\s+/g, " ")
     .trim();
 }
 
 try {
-  const data = JSON.parse(fs.readFileSync('./quran_fr.json', 'utf8'));
+  // Use the Arabic only file
+  const data = JSON.parse(fs.readFileSync('./quran.json', 'utf8'));
   quranCache = data.map(chapter => {
     const updatedVerses = chapter.verses.map((verse, index) => {
       let verseText = verse.text || "";
@@ -37,8 +38,7 @@ try {
       return {
         ...verse,
         text: verseText,
-        normText: normalize(verseText),
-        lowerTrans: (verse.translation || "").toLowerCase()
+        normText: normalize(verseText)
       };
     });
     return {
@@ -46,7 +46,7 @@ try {
       verses: updatedVerses
     };
   });
-  console.log('Quran data pre-loaded, Bismillah added, and normalized');
+  console.log('Arabic Quran data pre-loaded, Bismillah added, and normalized');
 } catch (err) {
   console.error('Error pre-loading Quran data:', err);
 }
@@ -84,18 +84,12 @@ const server = http.createServer((req, res) => {
     }
 
     const searchNormalized = normalize(query);
-    const lowerQuery = query.toLowerCase();
     let results = [];
     let totalOccurrences = 0;
 
     quranCache.forEach(chapter => {
       chapter.verses.forEach(verse => {
         let countInVerse = 0;
-        let pos = verse.lowerTrans.indexOf(lowerQuery);
-        while (pos !== -1) {
-          countInVerse++;
-          pos = verse.lowerTrans.indexOf(lowerQuery, pos + 1);
-        }
 
         if (searchNormalized && verse.normText.includes(searchNormalized)) {
           const matches = verse.normText.split(searchNormalized).length - 1;
@@ -108,8 +102,7 @@ const server = http.createServer((req, res) => {
             chapterId: chapter.id,
             chapterName: chapter.name,
             verseId: verse.id,
-            text: verse.text,
-            translation: verse.translation
+            text: verse.text
           });
         }
       });
@@ -124,11 +117,11 @@ const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/html' });
     res.end(`
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Al-Qur'an</title>
+  <title>القرآن الكريم</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
     :root {
@@ -220,6 +213,7 @@ const server = http.createServer((req, res) => {
       justify-content: space-between;
       align-items: center;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      flex-direction: row-reverse;
     }
     .logo {
       display: flex;
@@ -227,6 +221,7 @@ const server = http.createServer((req, res) => {
       gap: 10px;
       font-weight: bold;
       font-size: 1.2rem;
+      flex-direction: row-reverse;
     }
     .logo i { color: var(--primary-color); }
     
@@ -256,6 +251,7 @@ const server = http.createServer((req, res) => {
       align-items: center;
       border: 1px solid #f0f0f0;
       transition: all 0.3s ease;
+      flex-direction: row-reverse;
     }
     .search-box:focus-within {
       box-shadow: 0 6px 25px rgba(46, 204, 113, 0.15);
@@ -264,15 +260,16 @@ const server = http.createServer((req, res) => {
     .search-box input {
       flex: 1;
       border: none;
-      padding: 15px 45px 15px 30px;
+      padding: 15px 30px;
       border-radius: 50px;
       font-size: 1.1rem;
       outline: none;
       background: transparent;
+      text-align: right;
     }
     .clear-btn {
       position: absolute;
-      right: 170px;
+      left: 170px;
       background: #f8f9fa;
       border: none;
       color: #95a5a6;
@@ -314,6 +311,7 @@ const server = http.createServer((req, res) => {
       background: white;
       border-collapse: collapse;
       border-radius: 10px;
+      direction: rtl;
     }
     .results-container {
       max-height: 600px;
@@ -331,7 +329,7 @@ const server = http.createServer((req, res) => {
     }
     .results-table th {
       padding: 15px;
-      text-align: left;
+      text-align: right;
       font-size: 0.8rem;
       text-transform: uppercase;
       color: #7f8c8d;
@@ -339,18 +337,13 @@ const server = http.createServer((req, res) => {
     .results-table td {
       padding: 20px 15px;
       border-bottom: 1px solid #eee;
-      text-align: left;
+      text-align: right;
     }
     .arabic-text {
       font-family: 'Amiri', serif;
       font-size: 1.8rem;
       direction: rtl;
       line-height: 2.5;
-    }
-    .french-text {
-      font-size: 0.95rem;
-      color: #7f8c8d;
-      margin-top: 8px;
     }
     .highlight {
       background-color: #ffeb3b;
@@ -364,7 +357,7 @@ const server = http.createServer((req, res) => {
     .scroll-nav {
       position: fixed;
       right: 20px;
-      bottom: 80px; /* Remonté pour éviter d'être caché par les contrôles du navigateur ou de Replit */
+      bottom: 80px;
       display: flex;
       flex-direction: column;
       gap: 12px;
@@ -374,7 +367,7 @@ const server = http.createServer((req, res) => {
       background: white;
       color: var(--primary-color);
       border: none;
-      width: 50px; /* Légèrement plus grand pour faciliter le clic sur mobile */
+      width: 50px;
       height: 50px;
       border-radius: 50%;
       display: flex;
@@ -395,14 +388,14 @@ const server = http.createServer((req, res) => {
   <!-- Splash Screen -->
   <div id="splash-screen">
     <div class="splash-logo"><i class="fas fa-book-open"></i></div>
-    <div class="splash-text">Al-Qur'an</div>
+    <div class="splash-text">القرآن الكريم</div>
     <div class="splash-loader"></div>
   </div>
 
   <div class="app-content">
     <header>
-      <div class="logo"><i class="fas fa-book-open"></i> Al-Qur'an</div>
-      <div class="nav-right"><i class="fas fa-search"></i> Recherche</div>
+      <div class="logo"><i class="fas fa-book-open"></i> القرآن الكريم</div>
+      <div class="nav-right"><i class="fas fa-search"></i> بحث</div>
     </header>
 
     <div class="scroll-nav">
@@ -416,25 +409,25 @@ const server = http.createServer((req, res) => {
 
     <div class="container">
       <div class="search-section">
-        <h1>Al-Quran</h1>
-        <div class="subtitle">Recherchez dans 6 236 versets</div>
+        <h1>القرآن الكريم</h1>
+        <div class="subtitle">ابحث في 6236 آية</div>
         
         <div class="search-box">
-          <input type="text" id="searchInput" placeholder="Rechercher un mot, une phrase..." value="" oninput="toggleClearBtn()">
+          <input type="text" id="searchInput" placeholder="ابحث عن كلمة أو جملة..." value="" oninput="toggleClearBtn()">
           <button id="clearBtn" class="clear-btn" onclick="clearSearch()" title="Effacer"><i class="fas fa-times"></i></button>
-          <button class="search-btn" onclick="performSearch()">Rechercher</button>
+          <button class="search-btn" onclick="performSearch()">بحث</button>
         </div>
       </div>
 
-      <div id="loading" class="loading"><i class="fas fa-spinner fa-spin"></i> Chargement...</div>
+      <div id="loading" class="loading"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</div>
       
       <div id="resultsArea">
         <div style="margin-top: 5rem;">
           <div style="background: #e8f8f0; width: 80px; height: 80px; border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto; margin-bottom: 1rem;">
              <i class="fas fa-book-open" style="font-size: 2rem; color: var(--primary-color);"></i>
           </div>
-          <h3>Prêt à rechercher</h3>
-          <p style="color: #7f8c8d;">Le Coran complet (6236 versets) est chargé. Entrez un mot clé ci-dessus pour l'explorer instantanément.</p>
+          <h3>جاهز للبحث</h3>
+          <p style="color: #7f8c8d;">تم تحميل القرآن الكريم كاملاً. أدخل كلمة للبحث عنها.</p>
         </div>
       </div>
     </div>
@@ -444,9 +437,11 @@ const server = http.createServer((req, res) => {
     // Splash Screen Logic
     window.addEventListener('load', () => {
       setTimeout(() => {
-        document.getElementById('splash-screen').classList.add('hide-splash');
-        document.querySelector('.app-content').classList.add('show-content');
-      }, 2000); // 2 seconds display
+        const splash = document.getElementById('splash-screen');
+        if (splash) splash.classList.add('hide-splash');
+        const content = document.querySelector('.app-content');
+        if (content) content.classList.add('show-content');
+      }, 2000);
     });
 
     function toggleClearBtn() {
@@ -505,17 +500,12 @@ const server = http.createServer((req, res) => {
           .trim();
       }
 
-      function highlightText(text, term, isArabic = false) {
+      function highlightText(text, term) {
         if (!term) return text;
-        if (isArabic) {
-           const normText = normalize(text);
-           const normTerm = normalize(term);
-           if (!normText.includes(normTerm)) return text;
-           return "<span class='highlight'>" + text + "</span>";
-        }
-        const escapedTerm = term.replace(/[.*+?^$\\{}(\\)|[\]\\\\]/g, '\\\\$&');
-        const regex = new RegExp("(" + escapedTerm + ")", "gi");
-        return text.replace(regex, "<span class='highlight'>$1</span>");
+        const normText = normalize(text);
+        const normTerm = normalize(term);
+        if (!normText.includes(normTerm)) return text;
+        return "<span class='highlight'>" + text + "</span>";
       }
 
       try {
@@ -525,24 +515,24 @@ const server = http.createServer((req, res) => {
         loading.style.display = "none";
 
         if (data.results.length === 0) {
-          resultsArea.innerHTML = "<p>Aucun résultat trouvé.</p>";
+          resultsArea.innerHTML = "<p>لم يتم العثور على نتائج.</p>";
           return;
         }
 
-        let html = "<div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;'>" +
-            "<h2 style='margin: 0;'>Résultats</h2>" +
+        let html = "<div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-direction: row-reverse;'>" +
+            "<h2 style='margin: 0;'>النتائج</h2>" +
             "<div style='background: white; padding: 5px 15px; border-radius: 20px; font-size: 0.9rem; color: #7f8c8d; border: 1px solid #eee;'>" +
-              data.totalOccurrences + " occurrences trouvées" +
+              data.totalOccurrences + " آية وجدت" +
             "</div>" +
           "</div>" +
           "<div class='results-container'>" +
             "<table class='results-table'>" +
               "<thead class='table-header-fixed'>" +
                 "<tr>" +
-                  "<th style='width: 50px;'>Num</th>" +
-                  "<th style='width: 100px;'>Sourat</th>" +
-                  "<th style='width: 50px;'>Verset</th>" +
-                  "<th>Texte</th>" +
+                  "<th style='width: 50px;'>رقم</th>" +
+                  "<th style='width: 100px;'>السورة</th>" +
+                  "<th style='width: 50px;'>الآية</th>" +
+                  "<th>النص</th>" +
                 "</tr>" +
               "</thead>" +
               "<tbody>";
@@ -553,22 +543,21 @@ const server = http.createServer((req, res) => {
               "<td>" + res.chapterName + "</td>" +
               "<td>" + res.verseId + "</td>" +
               "<td>" +
-                "<div class='arabic-text'>" + highlightText(res.text, queryInput, true) + "</div>" +
-                "<div class='french-text'>" + highlightText(res.translation, queryInput, false) + "</div>" +
+                "<div class='arabic-text'>" + highlightText(res.text, queryInput) + "</div>" +
               "</td>" +
             "</tr>";
         });
 
         html += "</tbody></table></div>";
         if (data.totalResults > 100) {
-          html += "<p style='margin-top: 1rem; color: #7f8c8d;'>Affichage des 100 premiers résultats...</p>";
+          html += "<p style='margin-top: 1rem; color: #7f8c8d;'>عرض أول 100 نتيجة فقط...</p>";
         }
         resultsArea.innerHTML = html;
 
       } catch (err) {
         console.error(err);
         loading.style.display = "none";
-        resultsArea.innerHTML = "<p>Erreur lors de la recherche.</p>";
+        resultsArea.innerHTML = "<p>حدث خطأ أثناء البحث.</p>";
       }
     }
     

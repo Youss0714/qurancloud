@@ -302,19 +302,37 @@ const server = http.createServer((req, res) => {
       resultsArea.innerHTML = '';
 
       try {
-        // En mode réel, nous devrions indexer les fichiers ou utiliser une API de recherche.
-        // Ici, pour la démo, nous allons charger quran.json et filtrer.
         const response = await fetch('/quran_fr.json');
         const data = await response.json();
         
         const searchLower = query.toLowerCase();
         let results = [];
+        let totalOccurrences = 0;
+
         data.forEach(chapter => {
           chapter.verses.forEach(verse => {
             const translationFr = (verse.translation || '').toLowerCase();
             const verseText = (verse.text || '').toLowerCase();
+            
+            let countInVerse = 0;
+            
+            // Compter dans la traduction
+            let pos = translationFr.indexOf(searchLower);
+            while (pos !== -1) {
+              countInVerse++;
+              pos = translationFr.indexOf(searchLower, pos + 1);
+            }
 
-            if (translationFr.includes(searchLower) || verseText.includes(searchLower)) {
+            // Compter dans l'arabe (si on cherche de l'arabe)
+            // Note: On ajoute le compte de l'arabe seulement si différent de 0
+            let posAr = verseText.indexOf(searchLower);
+            while (posAr !== -1) {
+              countInVerse++;
+              posAr = verseText.indexOf(searchLower, posAr + 1);
+            }
+
+            if (countInVerse > 0) {
+              totalOccurrences += countInVerse;
               results.push({
                 chapterId: chapter.id,
                 chapterName: chapter.name,
@@ -333,43 +351,39 @@ const server = http.createServer((req, res) => {
           return;
         }
 
-        let html = \`
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-            <h2 style="margin: 0;">Résultats</h2>
-            <div style="background: white; padding: 5px 15px; border-radius: 20px; font-size: 0.9rem; color: #7f8c8d; border: 1px solid #eee;">
-              \${results.length} occurrences trouvées
-            </div>
-          </div>
-          <div class="results-container">
-            <table class="results-table">
-              <thead class="table-header-fixed">
-                <tr>
-                  <th>Num</th>
-                  <th>Sourat</th>
-                  <th>Verset</th>
-                  <th>Texte</th>
-                </tr>
-              </thead>
-              <tbody>
-        \`;
+        let html = '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">' +
+            '<h2 style="margin: 0;">Résultats</h2>' +
+            '<div style="background: white; padding: 5px 15px; border-radius: 20px; font-size: 0.9rem; color: #7f8c8d; border: 1px solid #eee;">' +
+              totalOccurrences + ' occurrences trouvées' +
+            '</div>' +
+          '</div>' +
+          '<div class="results-container">' +
+            '<table class="results-table">' +
+              '<thead class="table-header-fixed">' +
+                '<tr>' +
+                  '<th style="width: 50px;">Num</th>' +
+                  '<th style="width: 100px;">Sourat</th>' +
+                  '<th style="width: 50px;">Verset</th>' +
+                  '<th>Texte</th>' +
+                '</tr>' +
+              '</thead>' +
+              '<tbody>';
 
-        results.slice(0, 50).forEach(res => {
-          html += \`
-            <tr>
-              <td style="font-weight: bold; width: 50px;">\${res.chapterId}</td>
-              <td style="width: 100px;">\${res.chapterName}</td>
-              <td style="width: 50px;">\${res.verseId}</td>
-              <td>
-                <div class="arabic-text">\${res.text}</div>
-                <div class="french-text">\${res.translation}</div>
-              </td>
-            </tr>
-          \`;
+        results.slice(0, 100).forEach(res => {
+          html += '<tr>' +
+              '<td style="font-weight: bold;">' + res.chapterId + '</td>' +
+              '<td>' + res.chapterName + '</td>' +
+              '<td>' + res.verseId + '</td>' +
+              '<td>' +
+                '<div class="arabic-text">' + res.text + '</div>' +
+                '<div class="french-text">' + res.translation + '</div>' +
+              '</td>' +
+            '</tr>';
         });
 
         html += '</tbody></table></div>';
-        if (results.length > 50) {
-          html += '<p style="margin-top: 1rem; color: #7f8c8d;">Affichage des 50 premiers résultats...</p>';
+        if (results.length > 100) {
+          html += '<p style="margin-top: 1rem; color: #7f8c8d;">Affichage des 100 premiers résultats...</p>';
         }
         resultsArea.innerHTML = html;
 
@@ -402,5 +416,5 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, HOST, () => {
-  console.log(`Quran JSON API server running at http://${HOST}:${PORT}`);
+  console.log('Quran JSON API server running at http://' + HOST + ':' + PORT);
 });

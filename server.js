@@ -87,14 +87,30 @@ const server = http.createServer((req, res) => {
       box-shadow: 0 2px 10px rgba(0,0,0,0.05);
       max-width: 700px;
       margin: 0 auto;
+      position: relative;
+      align-items: center;
     }
     .search-box input {
       flex: 1;
       border: 1px solid #eee;
-      padding: 12px 20px;
+      padding: 12px 40px 12px 20px;
       border-radius: 8px;
       font-size: 1rem;
       outline: none;
+    }
+    .clear-btn {
+      position: absolute;
+      right: 145px;
+      background: none;
+      border: none;
+      color: #bdc3c7;
+      cursor: pointer;
+      font-size: 1.2rem;
+      display: none;
+      padding: 5px;
+    }
+    .clear-btn:hover {
+      color: #7f8c8d;
     }
     .search-btn {
       background: var(--primary-color);
@@ -204,7 +220,8 @@ const server = http.createServer((req, res) => {
       <div class="subtitle">Recherchez dans 6 236 versets</div>
       
       <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Rechercher un mot, une phrase..." value="ض">
+        <input type="text" id="searchInput" placeholder="Rechercher un mot, une phrase..." value="ض" oninput="toggleClearBtn()">
+        <button id="clearBtn" class="clear-btn" onclick="clearSearch()" title="Effacer"><i class="fas fa-times"></i></button>
         <button class="search-btn" onclick="performSearch()">Rechercher</button>
       </div>
     </div>
@@ -223,6 +240,19 @@ const server = http.createServer((req, res) => {
   </div>
 
   <script>
+    function toggleClearBtn() {
+      const input = document.getElementById('searchInput');
+      const clearBtn = document.getElementById('clearBtn');
+      clearBtn.style.display = input.value ? 'block' : 'none';
+    }
+
+    function clearSearch() {
+      const input = document.getElementById('searchInput');
+      input.value = '';
+      toggleClearBtn();
+      input.focus();
+    }
+
     function scrollToTop() {
       const container = document.querySelector('.results-container');
       if (container) {

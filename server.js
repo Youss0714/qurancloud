@@ -187,6 +187,13 @@ const server = http.createServer((req, res) => {
       color: #7f8c8d;
       margin-top: 8px;
     }
+    .highlight {
+      background-color: #ffeb3b;
+      color: #000;
+      padding: 0 2px;
+      border-radius: 2px;
+      font-weight: bold;
+    }
     .loading { margin: 2rem; color: var(--primary-color); display: none; }
     
     .scroll-nav {
@@ -301,6 +308,13 @@ const server = http.createServer((req, res) => {
       loading.style.display = 'block';
       resultsArea.innerHTML = '';
 
+      function highlightText(text, term) {
+        if (!term) return text;
+        const escapedTerm = term.replace(/[.*+?^$\\{}(\\)|[\]\\\\]/g, '\\\\$&');
+        const regex = new RegExp('(' + escapedTerm + ')', 'gi');
+        return text.replace(regex, '<span class="highlight">\$1</span>');
+      }
+
       try {
         const response = await fetch('/quran_fr.json');
         const data = await response.json();
@@ -316,15 +330,12 @@ const server = http.createServer((req, res) => {
             
             let countInVerse = 0;
             
-            // Compter dans la traduction
             let pos = translationFr.indexOf(searchLower);
             while (pos !== -1) {
               countInVerse++;
               pos = translationFr.indexOf(searchLower, pos + 1);
             }
 
-            // Compter dans l'arabe (si on cherche de l'arabe)
-            // Note: On ajoute le compte de l'arabe seulement si différent de 0
             let posAr = verseText.indexOf(searchLower);
             while (posAr !== -1) {
               countInVerse++;
@@ -337,8 +348,8 @@ const server = http.createServer((req, res) => {
                 chapterId: chapter.id,
                 chapterName: chapter.name,
                 verseId: verse.id,
-                text: verse.text,
-                translation: verse.translation
+                text: highlightText(verse.text, query),
+                translation: highlightText(verse.translation, query)
               });
             }
           });
@@ -396,7 +407,7 @@ const server = http.createServer((req, res) => {
   </script>
 </body>
 </html>
-    `);
+`);
     return;
   }
 

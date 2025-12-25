@@ -17,72 +17,257 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  let filePath = '.' + req.url;
+  const url = req.url.split('?')[0];
+  let filePath = '.' + url;
   
-  if (req.url === '/favicon.ico') {
+  if (url === '/favicon.ico') {
     res.writeHead(204);
     res.end();
     return;
   }
   
-  if (filePath === './') {
+  if (url === '/') {
     res.writeHead(200, { 'Content-Type': 'text/html' });
     res.end(`
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quran JSON API</title>
+  <title>Al-Qur'an</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
-    body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
-    h1 { color: #2c3e50; }
-    h2 { color: #34495e; margin-top: 30px; }
-    ul { line-height: 2; }
-    a { color: #3498db; text-decoration: none; }
-    a:hover { text-decoration: underline; }
-    code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; }
+    :root {
+      --primary-color: #2ecc71;
+      --bg-color: #f8f9fa;
+      --text-color: #2c3e50;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+    }
+    header {
+      background: white;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: bold;
+      font-size: 1.2rem;
+    }
+    .logo i { color: var(--primary-color); }
+    
+    .container {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      text-align: center;
+    }
+    
+    .search-section {
+      margin-bottom: 2rem;
+    }
+    h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+    .subtitle { color: #7f8c8d; margin-bottom: 2rem; }
+    
+    .search-box {
+      display: flex;
+      gap: 10px;
+      background: white;
+      padding: 5px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    .search-box input {
+      flex: 1;
+      border: 1px solid #eee;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 1rem;
+      outline: none;
+    }
+    .search-btn {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 0 25px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .search-btn:hover { opacity: 0.9; }
+
+    .results-table {
+      width: 100%;
+      background: white;
+      border-collapse: collapse;
+      margin-top: 2rem;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .results-table th {
+      background: #f1f3f5;
+      padding: 15px;
+      text-align: left;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      color: #7f8c8d;
+    }
+    .results-table td {
+      padding: 20px 15px;
+      border-bottom: 1px solid #eee;
+      text-align: left;
+    }
+    .arabic-text {
+      font-family: 'Amiri', serif;
+      font-size: 1.8rem;
+      direction: rtl;
+      line-height: 2.5;
+    }
+    .french-text {
+      font-size: 0.95rem;
+      color: #7f8c8d;
+      margin-top: 8px;
+    }
+    .loading { margin: 2rem; color: var(--primary-color); display: none; }
+    
+    @import url('https://fonts.googleapis.com/css2?family=Amiri&display=swap');
   </style>
 </head>
 <body>
-  <h1>Quran JSON API</h1>
-  <p>This API provides Quran data in JSON format with multiple language translations.</p>
-  
-  <h2>Available Endpoints</h2>
-  <ul>
-    <li><a href="/quran.json">/quran.json</a> - Full Quran (Arabic)</li>
-    <li><a href="/quran_en.json">/quran_en.json</a> - English translation</li>
-    <li><a href="/quran_bn.json">/quran_bn.json</a> - Bengali translation</li>
-    <li><a href="/quran_es.json">/quran_es.json</a> - Spanish translation</li>
-    <li><a href="/quran_fr.json">/quran_fr.json</a> - French translation</li>
-    <li><a href="/quran_id.json">/quran_id.json</a> - Indonesian translation</li>
-    <li><a href="/quran_ru.json">/quran_ru.json</a> - Russian translation</li>
-    <li><a href="/quran_sv.json">/quran_sv.json</a> - Swedish translation</li>
-    <li><a href="/quran_tr.json">/quran_tr.json</a> - Turkish translation</li>
-    <li><a href="/quran_ur.json">/quran_ur.json</a> - Urdu translation</li>
-    <li><a href="/quran_zh.json">/quran_zh.json</a> - Chinese translation</li>
-    <li><a href="/quran_transliteration.json">/quran_transliteration.json</a> - Transliteration</li>
-  </ul>
-  
-  <h2>Chapters</h2>
-  <ul>
-    <li><code>/chapters/index.json</code> - List of all chapters</li>
-    <li><code>/chapters/{lang}/{chapter_id}.json</code> - Chapter by language (en, es, fr, etc.)</li>
-    <li>Example: <a href="/chapters/en/1.json">/chapters/en/1.json</a></li>
-  </ul>
-  
-  <h2>Verses</h2>
-  <ul>
-    <li><code>/verses/{verse_id}.json</code> - Individual verse with all translations</li>
-    <li>Example: <a href="/verses/1.json">/verses/1.json</a></li>
-  </ul>
+  <header>
+    <div class="logo"><i class="fas fa-book-open"></i> Al-Qur'an</div>
+    <div class="nav-right"><i class="fas fa-search"></i> Recherche</div>
+  </header>
+
+  <div class="container">
+    <div class="search-section">
+      <h1>Al-Quran</h1>
+      <div class="subtitle">Recherchez dans 6 236 versets</div>
+      
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Rechercher un mot, une phrase..." value="ض">
+        <button class="search-btn" onclick="performSearch()">Rechercher</button>
+      </div>
+    </div>
+
+    <div id="loading" class="loading"><i class="fas fa-spinner fa-spin"></i> Chargement...</div>
+    
+    <div id="resultsArea">
+      <div style="margin-top: 5rem;">
+        <div style="background: #e8f8f0; width: 80px; height: 80px; border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto; margin-bottom: 1rem;">
+           <i class="fas fa-book-open" style="font-size: 2rem; color: var(--primary-color);"></i>
+        </div>
+        <h3>Prêt à rechercher</h3>
+        <p style="color: #7f8c8d;">Le Coran complet (6236 versets) est chargé. Entrez un mot clé ci-dessus pour l'explorer instantanément, même hors ligne.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function performSearch() {
+      const query = document.getElementById('searchInput').value.trim();
+      if (!query) return;
+
+      const loading = document.getElementById('loading');
+      const resultsArea = document.getElementById('resultsArea');
+      
+      loading.style.display = 'block';
+      resultsArea.innerHTML = '';
+
+      try {
+        // En mode réel, nous devrions indexer les fichiers ou utiliser une API de recherche.
+        // Ici, pour la démo, nous allons charger quran.json et filtrer.
+        const response = await fetch('/quran.json');
+        const data = await response.json();
+        
+        let results = [];
+        data.forEach(chapter => {
+          chapter.verses.forEach(verse => {
+            if (verse.text.includes(query)) {
+              results.push({
+                chapterId: chapter.id,
+                chapterName: chapter.name,
+                verseId: verse.id,
+                text: verse.text,
+                translation: verse.translations ? verse.translations.fr : ''
+              });
+            }
+          });
+        });
+
+        loading.style.display = 'none';
+
+        if (results.length === 0) {
+          resultsArea.innerHTML = '<p>Aucun résultat trouvé.</p>';
+          return;
+        }
+
+        let html = \`
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2 style="margin: 0;">Résultats</h2>
+            <div style="background: white; padding: 5px 15px; border-radius: 20px; font-size: 0.9rem; color: #7f8c8d; border: 1px solid #eee;">
+              \${results.length} occurrences trouvées
+            </div>
+          </div>
+          <table class="results-table">
+            <thead>
+              <tr>
+                <th>Num</th>
+                <th>Sourat</th>
+                <th>Verset</th>
+                <th>Texte</th>
+              </tr>
+            </thead>
+            <tbody>
+        \`;
+
+        results.slice(0, 50).forEach(res => {
+          html += \`
+            <tr>
+              <td style="font-weight: bold;">\${res.chapterId}</td>
+              <td>\${res.chapterName}</td>
+              <td>\${res.verseId}</td>
+              <td>
+                <div class="arabic-text">\${res.text}</div>
+                <div class="french-text">\${res.translation}</div>
+              </td>
+            </tr>
+          \`;
+        });
+
+        html += '</tbody></table>';
+        if (results.length > 50) {
+          html += '<p style="margin-top: 1rem; color: #7f8c8d;">Affichage des 50 premiers résultats...</p>';
+        }
+        resultsArea.innerHTML = html;
+
+      } catch (err) {
+        console.error(err);
+        loading.style.display = 'none';
+        resultsArea.innerHTML = '<p>Erreur lors de la recherche.</p>';
+      }
+    }
+  </script>
 </body>
 </html>
     `);
     return;
   }
 
-  if (!filePath.endsWith('.json')) {
+  if (!filePath.endsWith('.json') && !filePath.includes('.')) {
     filePath = filePath + '.json';
   }
 

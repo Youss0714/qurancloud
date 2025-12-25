@@ -112,13 +112,23 @@ const server = http.createServer((req, res) => {
       width: 100%;
       background: white;
       border-collapse: collapse;
-      margin-top: 2rem;
       border-radius: 10px;
-      overflow: hidden;
+    }
+    .results-container {
+      max-height: 600px;
+      overflow-y: auto;
+      background: white;
+      border-radius: 10px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      margin-top: 1rem;
+    }
+    .table-header-fixed {
+      position: sticky;
+      top: 0;
+      background: #f1f3f5;
+      z-index: 10;
     }
     .results-table th {
-      background: #f1f3f5;
       padding: 15px;
       text-align: left;
       font-size: 0.8rem;
@@ -226,24 +236,25 @@ const server = http.createServer((req, res) => {
               \${results.length} occurrences trouvées
             </div>
           </div>
-          <table class="results-table">
-            <thead>
-              <tr>
-                <th>Num</th>
-                <th>Sourat</th>
-                <th>Verset</th>
-                <th>Texte</th>
-              </tr>
-            </thead>
-            <tbody>
+          <div class="results-container">
+            <table class="results-table">
+              <thead class="table-header-fixed">
+                <tr>
+                  <th>Num</th>
+                  <th>Sourat</th>
+                  <th>Verset</th>
+                  <th>Texte</th>
+                </tr>
+              </thead>
+              <tbody>
         \`;
 
         results.slice(0, 50).forEach(res => {
           html += \`
             <tr>
-              <td style="font-weight: bold;">\${res.chapterId}</td>
-              <td>\${res.chapterName}</td>
-              <td>\${res.verseId}</td>
+              <td style="font-weight: bold; width: 50px;">\${res.chapterId}</td>
+              <td style="width: 100px;">\${res.chapterName}</td>
+              <td style="width: 50px;">\${res.verseId}</td>
               <td>
                 <div class="arabic-text">\${res.text}</div>
                 <div class="french-text">\${res.translation}</div>
@@ -252,7 +263,7 @@ const server = http.createServer((req, res) => {
           \`;
         });
 
-        html += '</tbody></table>';
+        html += '</tbody></table></div>';
         if (results.length > 50) {
           html += '<p style="margin-top: 1rem; color: #7f8c8d;">Affichage des 50 premiers résultats...</p>';
         }

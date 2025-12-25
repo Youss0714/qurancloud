@@ -193,10 +193,17 @@ const server = http.createServer((req, res) => {
         const response = await fetch('/quran.json');
         const data = await response.json();
         
+        const searchLower = query.toLowerCase();
         let results = [];
         data.forEach(chapter => {
           chapter.verses.forEach(verse => {
-            if (verse.text.includes(query)) {
+            const verseText = (verse.text || '').toLowerCase();
+            const translationFr = (verse.translations && verse.translations.fr ? verse.translations.fr : '').toLowerCase();
+            const translationEn = (verse.translations && verse.translations.en ? verse.translations.en : '').toLowerCase();
+
+            if (verseText.includes(searchLower) || 
+                translationFr.includes(searchLower) || 
+                translationEn.includes(searchLower)) {
               results.push({
                 chapterId: chapter.id,
                 chapterName: chapter.name,

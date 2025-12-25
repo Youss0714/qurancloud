@@ -5,6 +5,15 @@ const path = require('path');
 const PORT = 5000;
 const HOST = '0.0.0.0';
 
+// Pre-load data to make search instant
+let quranData = null;
+try {
+  quranData = JSON.parse(fs.readFileSync('./quran_fr.json', 'utf8'));
+  console.log('Quran data pre-loaded for fast search');
+} catch (err) {
+  console.error('Error pre-loading Quran data:', err);
+}
+
 const server = http.createServer((req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -267,6 +276,8 @@ const server = http.createServer((req, res) => {
   </div>
 
   <script>
+    let quranCache = null;
+
     function toggleClearBtn() {
       const input = document.getElementById('searchInput');
       const clearBtn = document.getElementById('clearBtn');
@@ -302,14 +313,14 @@ const server = http.createServer((req, res) => {
       if (!text) return "";
       return text
         .normalize("NFD")
-        .replace(/[\\u064B-\\u0652\\u0670\\u06E1\\u06D6-\\u06ED]/g, "") // Diacritics
+        .replace(/[\\u064B-\\u0652\\u0670\\u06E1\\u06D6-\\u06ED]/g, "")
         .replace(/[أإآ]/g, "ا")
         .replace(/ؤ/g, "و")
         .replace(/ئ/g, "ي")
         .replace(/ى/g, "ي")
         .replace(/ة/g, "ه")
         .replace(/ء/g, "")
-        .replace(/\\u0640/g, "") // Tatweel
+        .replace(/\\u0640/g, "")
         .replace(/\\s+/g, " ")
         .trim();
     }
@@ -322,15 +333,13 @@ const server = http.createServer((req, res) => {
       const resultsArea = document.getElementById('resultsArea');
       
       loading.style.display = 'block';
-      resultsArea.innerHTML = '';
-
+      
       function highlightText(text, term, isArabic = false) {
         if (!term) return text;
         if (isArabic) {
            const normText = normalize(text);
            const normTerm = normalize(term);
            if (!normText.includes(normTerm)) return text;
-           // Simple highlight for Arabic if normalized match found
            return "<span class='highlight'>" + text + "</span>";
         }
         const escapedTerm = term.replace(/[.*+?^$\\{}(\\)|[\]\\\\]/g, '\\\\$&');
@@ -339,36 +348,38 @@ const server = http.createServer((req, res) => {
       }
 
       try {
-        const response = await fetch("/quran_fr.json");
-        const data = await response.json();
+        if (!quranCache) {
+          const response = await fetch("/quran_fr.json");
+          quranCache = await response.json();
+          // Pre-normalize Arabic text in cache for faster search
+          quranCache.forEach(chapter => {
+            chapter.verses.forEach(verse => {
+              verse.normText = normalize(verse.text || "");
+              verse.lowerTrans = (verse.translation || "").toLowerCase();
+            });
+          });
+        }
         
         const searchNormalized = normalize(queryInput);
+        const lowerQuery = queryInput.toLowerCase();
         let results = [];
         let totalOccurrences = 0;
 
-        data.forEach(chapter => {
+        quranCache.forEach(chapter => {
           chapter.verses.forEach(verse => {
-            const translationFr = (verse.translation || "").toLowerCase();
-            const verseText = verse.text || "";
-            const verseTextNormalized = normalize(verseText);
-            
             let countInVerse = 0;
             
             // Search in French
-            let pos = translationFr.indexOf(queryInput.toLowerCase());
+            let pos = verse.lowerTrans.indexOf(lowerQuery);
             while (pos !== -1) {
               countInVerse++;
-              pos = translationFr.indexOf(queryInput.toLowerCase(), pos + 1);
+              pos = verse.lowerTrans.indexOf(lowerQuery, pos + 1);
             }
 
             // Search in Arabic
-            if (searchNormalized.length > 0) {
-              // Check if normalized query exists in normalized verse
-              if (verseTextNormalized.includes(searchNormalized)) {
-                 // Estimation of occurrences
-                 const matches = verseTextNormalized.split(searchNormalized).length - 1;
-                 countInVerse += matches;
-              }
+            if (searchNormalized && verse.normText.includes(searchNormalized)) {
+              const matches = verse.normText.split(searchNormalized).length - 1;
+              countInVerse += matches;
             }
 
             if (countInVerse > 0) {

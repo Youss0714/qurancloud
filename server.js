@@ -298,6 +298,15 @@ const server = http.createServer((req, res) => {
       }
     }
 
+    function normalizeArabic(text) {
+      if (!text) return '';
+      return text
+        .replace(/[\\u064B-\\u0652\\u0670]/g, '') // Remove diacritics
+        .replace(/[\\u0622\\u0623\\u0625]/g, '\\u0627') // Normalize Alef
+        .replace(/\\u0649/g, '\\u064A') // Normalize Alef Maqsura to Ya
+        .replace(/\\u0629/g, '\\u0647'); // Normalize Teh Marbuta to Heh
+    }
+
     async function performSearch() {
       const query = document.getElementById('searchInput').value.trim();
       if (!query) return;
@@ -319,7 +328,7 @@ const server = http.createServer((req, res) => {
         const response = await fetch('/quran_fr.json');
         const data = await response.json();
         
-        const searchLower = query.toLowerCase();
+        const searchNormalized = normalizeArabic(query.toLowerCase());
         let results = [];
         let totalOccurrences = 0;
 
@@ -327,19 +336,20 @@ const server = http.createServer((req, res) => {
           chapter.verses.forEach(verse => {
             const translationFr = (verse.translation || '').toLowerCase();
             const verseText = (verse.text || '').toLowerCase();
+            const verseTextNormalized = normalizeArabic(verseText);
             
             let countInVerse = 0;
             
-            let pos = translationFr.indexOf(searchLower);
+            let pos = translationFr.indexOf(query.toLowerCase());
             while (pos !== -1) {
               countInVerse++;
-              pos = translationFr.indexOf(searchLower, pos + 1);
+              pos = translationFr.indexOf(query.toLowerCase(), pos + 1);
             }
 
-            let posAr = verseText.indexOf(searchLower);
+            let posAr = verseTextNormalized.indexOf(searchNormalized);
             while (posAr !== -1) {
               countInVerse++;
-              posAr = verseText.indexOf(searchLower, posAr + 1);
+              posAr = verseTextNormalized.indexOf(searchNormalized, posAr + 1);
             }
 
             if (countInVerse > 0) {

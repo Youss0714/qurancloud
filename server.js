@@ -190,26 +190,23 @@ const server = http.createServer((req, res) => {
       try {
         // En mode réel, nous devrions indexer les fichiers ou utiliser une API de recherche.
         // Ici, pour la démo, nous allons charger quran.json et filtrer.
-        const response = await fetch('/quran.json');
+        const response = await fetch('/quran_fr.json');
         const data = await response.json();
         
         const searchLower = query.toLowerCase();
         let results = [];
         data.forEach(chapter => {
           chapter.verses.forEach(verse => {
+            const translationFr = (verse.translation || '').toLowerCase();
             const verseText = (verse.text || '').toLowerCase();
-            const translationFr = (verse.translations && verse.translations.fr ? verse.translations.fr : '').toLowerCase();
-            const translationEn = (verse.translations && verse.translations.en ? verse.translations.en : '').toLowerCase();
 
-            if (verseText.includes(searchLower) || 
-                translationFr.includes(searchLower) || 
-                translationEn.includes(searchLower)) {
+            if (translationFr.includes(searchLower) || verseText.includes(searchLower)) {
               results.push({
                 chapterId: chapter.id,
                 chapterName: chapter.name,
                 verseId: verse.id,
                 text: verse.text,
-                translation: verse.translations ? verse.translations.fr : ''
+                translation: verse.translation
               });
             }
           });

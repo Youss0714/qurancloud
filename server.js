@@ -5,6 +5,8 @@ const path = require('path');
 const PORT = 5000;
 const HOST = '0.0.0.0';
 
+const BISMILLAH = "بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ";
+
 // Cache normalized data at server startup
 let quranCache = null;
 
@@ -26,15 +28,27 @@ function normalize(text) {
 
 try {
   const data = JSON.parse(fs.readFileSync('./quran_fr.json', 'utf8'));
-  quranCache = data.map(chapter => ({
-    ...chapter,
-    verses: chapter.verses.map(verse => ({
-      ...verse,
-      normText: normalize(verse.text || ""),
-      lowerTrans: (verse.translation || "").toLowerCase()
-    }))
-  }));
-  console.log('Quran data pre-loaded and normalized');
+  quranCache = data.map(chapter => {
+    const updatedVerses = chapter.verses.map((verse, index) => {
+      let verseText = verse.text || "";
+      // Add Bismillah to the beginning of the first verse of each surah (except surah 9)
+      // and if it's not already there
+      if (index === 0 && chapter.id !== 9 && !verseText.includes(BISMILLAH)) {
+        verseText = BISMILLAH + " " + verseText;
+      }
+      return {
+        ...verse,
+        text: verseText,
+        normText: normalize(verseText),
+        lowerTrans: (verse.translation || "").toLowerCase()
+      };
+    });
+    return {
+      ...chapter,
+      verses: updatedVerses
+    };
+  });
+  console.log('Quran data pre-loaded, Bismillah added, and normalized');
 } catch (err) {
   console.error('Error pre-loading Quran data:', err);
 }

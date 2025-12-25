@@ -332,27 +332,40 @@ const server = http.createServer((req, res) => {
       opacity: 0.95;
     }
 
-    .stats-container {
-      display: flex;
-      justify-content: center;
-      gap: 20px;
+    /* Stats Table Styling */
+    .stats-table-wrapper {
       margin-bottom: 2rem;
-      flex-wrap: wrap;
-    }
-    .stat-card {
       background: white;
-      padding: 15px 25px;
       border-radius: 15px;
+      overflow: hidden;
       box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-      flex: 1;
-      min-width: 150px;
-      max-width: 250px;
+      border: 1px solid #eee;
     }
-    .stat-card .label { color: #7f8c8d; font-size: 0.9rem; margin-bottom: 5px; }
-    .stat-card .value { font-size: 1.4rem; font-weight: bold; color: var(--primary-color); }
-    .stat-card.total { background: var(--primary-color); color: white; }
-    .stat-card.total .label { color: rgba(255,255,255,0.8); }
-    .stat-card.total .value { color: white; }
+    .stats-table {
+      width: 100%;
+      border-collapse: collapse;
+      direction: rtl;
+    }
+    .stats-table th {
+      background: #f8f9fa;
+      padding: 15px;
+      text-align: center;
+      color: #7f8c8d;
+      font-size: 0.9rem;
+      border-bottom: 1px solid #eee;
+    }
+    .stats-table td {
+      padding: 15px;
+      text-align: center;
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: var(--primary-color);
+    }
+    .stats-table td.total-cell {
+      background: #e8f8f0;
+      color: var(--primary-color);
+      font-size: 1.4rem;
+    }
 
     .results-table {
       width: 100%;
@@ -568,23 +581,29 @@ const server = http.createServer((req, res) => {
         }
 
         let html = \`
-          <div class="stats-container">
-            <div class="stat-card">
-              <div class="label">عدد الآيات</div>
-              <div class="value">\${data.totalOccurrences}</div>
-            </div>
-            <div class="stat-card">
-              <div class="label">القيمة العددية</div>
-              <div class="value">\${data.wordValue}</div>
-            </div>
-            <div class="stat-card total">
-              <div class="label">الإجمالي الحسابي</div>
-              <div class="value">\${data.totalCalculation.toLocaleString()}</div>
-            </div>
+          <div class="stats-table-wrapper">
+            <table class="stats-table">
+              <thead>
+                <tr>
+                  <th>عدد الآيات</th>
+                  <th>القيمة العددية</th>
+                  <th>الإجمالي الحسابي</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>\${data.totalOccurrences}</td>
+                  <td>\${data.wordValue}</td>
+                  <td class="total-cell">\${data.totalCalculation.toLocaleString()}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
+
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-direction: row-reverse;">
-            <h2 style="margin: 0;">نتائج البحث</h2>
+            <h2 style="margin: 0;">نتائج البحث (\${data.totalResults})</h2>
           </div>
+
           <div class='results-container'>
             <table class='results-table'>
               <thead class='table-header-fixed'>
@@ -629,7 +648,7 @@ const server = http.createServer((req, res) => {
   </script>
 </body>
 </html>
-`);
+\`);
     return;
   }
 });

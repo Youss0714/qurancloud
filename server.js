@@ -301,10 +301,13 @@ const server = http.createServer((req, res) => {
     function normalizeArabic(text) {
       if (!text) return '';
       return text
-        .replace(/[\\u064B-\\u0652\\u0670]/g, '') // Remove diacritics
-        .replace(/[\\u0622\\u0623\\u0625]/g, '\\u0627') // Normalize Alef
-        .replace(/\\u0649/g, '\\u064A') // Normalize Alef Maqsura to Ya
-        .replace(/\\u0629/g, '\\u0647'); // Normalize Teh Marbuta to Heh
+        .normalize("NFD")
+        .replace(/[\\u064B-\\u0652\\u0670\\u06D6-\\u06ED]/g, "") // Remove all vowels and small signs
+        .replace(/[\\u0622\\u0623\\u0625]/g, "\\u0627") // Normalize Alif
+        .replace(/\\u0649/g, "\\u064A") // Alif Maqsura to Ya
+        .replace(/\\u0629/g, "\\u0647") // Teh Marbuta to Heh
+        .replace(/\\s+/g, " ")
+        .trim();
     }
 
     async function performSearch() {
@@ -346,10 +349,12 @@ const server = http.createServer((req, res) => {
               pos = translationFr.indexOf(query.toLowerCase(), pos + 1);
             }
 
-            let posAr = verseTextNormalized.indexOf(searchNormalized);
-            while (posAr !== -1) {
-              countInVerse++;
-              posAr = verseTextNormalized.indexOf(searchNormalized, posAr + 1);
+            if (searchNormalized.length > 0) {
+              let posAr = verseTextNormalized.indexOf(searchNormalized);
+              while (posAr !== -1) {
+                countInVerse++;
+                posAr = verseTextNormalized.indexOf(searchNormalized, posAr + 1);
+              }
             }
 
             if (countInVerse > 0) {

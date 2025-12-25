@@ -12,14 +12,14 @@ function normalize(text) {
   if (!text) return "";
   return text
     .normalize("NFD")
-    .replace(/[\u064B-\u0652\u0670\u06E1\u06D6-\u06ED]/g, "") // Suppression des diacritiques (Tashkeel)
-    .replace(/[\u0671]/g, "ا") // Alif Wasla ٱ -> ا
-    .replace(/[أإآ]/g, "ا") // Normalisation des Alifs
-    .replace(/ؤ/g, "و") // Normalisation Waw
-    .replace(/[ئى]/g, "ي") // Normalisation Ya et Ya Hamza
-    .replace(/ة/g, "ه") // Normalisation Ta Marbuta
-    .replace(/ء/g, "") // Suppression Hamza isolée
-    .replace(/\u0640/g, "") // Suppression Tatweel
+    .replace(/[\u064B-\u0652\u0670\u06E1\u06D6-\u06ED]/g, "")
+    .replace(/[\u0671]/g, "ا")
+    .replace(/[أإآ]/g, "ا")
+    .replace(/ؤ/g, "و")
+    .replace(/[ئى]/g, "ي")
+    .replace(/ة/g, "ه")
+    .replace(/ء/g, "")
+    .replace(/\u0640/g, "")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -51,7 +51,8 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  const url = req.url.split('?')[0];
+  const urlParts = req.url.split('?');
+  const url = urlParts[0];
   
   if (url === '/favicon.ico') {
     res.writeHead(204);
@@ -61,7 +62,9 @@ const server = http.createServer((req, res) => {
 
   // Handle Search API
   if (url === '/api/search') {
-    const query = new URL(req.url, `http://${req.headers.host}`).searchParams.get('q');
+    const params = new URLSearchParams(urlParts[1] || '');
+    const query = params.get('q');
+    
     if (!query) {
       res.writeHead(400);
       res.end(JSON.stringify({ error: 'Missing query' }));
@@ -416,7 +419,7 @@ const server = http.createServer((req, res) => {
       }
 
       try {
-        const response = await fetch(\`/api/search?q=\${encodeURIComponent(queryInput)}\`);
+        const response = await fetch('/api/search?q=' + encodeURIComponent(queryInput));
         const data = await response.json();
         
         loading.style.display = "none";

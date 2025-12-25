@@ -302,14 +302,14 @@ const server = http.createServer((req, res) => {
       if (!text) return "";
       return text
         .normalize("NFD")
-        .replace(/[\\u064B-\\u0652\\u0670\\u06E1\\u06D6-\\u06ED]/g, "")
+        .replace(/[\\u064B-\\u0652\\u0670\\u06E1\\u06D6-\\u06ED]/g, "") // Diacritics
         .replace(/[أإآ]/g, "ا")
         .replace(/ؤ/g, "و")
         .replace(/ئ/g, "ي")
         .replace(/ى/g, "ي")
         .replace(/ة/g, "ه")
         .replace(/ء/g, "")
-        .replace(/\\u0640/g, "")
+        .replace(/\\u0640/g, "") // Tatweel
         .replace(/\\s+/g, " ")
         .trim();
     }
@@ -324,8 +324,15 @@ const server = http.createServer((req, res) => {
       loading.style.display = 'block';
       resultsArea.innerHTML = '';
 
-      function highlightText(text, term) {
+      function highlightText(text, term, isArabic = false) {
         if (!term) return text;
+        if (isArabic) {
+           const normText = normalize(text);
+           const normTerm = normalize(term);
+           if (!normText.includes(normTerm)) return text;
+           // Simple highlight for Arabic if normalized match found
+           return "<span class='highlight'>" + text + "</span>";
+        }
         const escapedTerm = term.replace(/[.*+?^$\\{}(\\)|[\]\\\\]/g, '\\\\$&');
         const regex = new RegExp("(" + escapedTerm + ")", "gi");
         return text.replace(regex, "<span class='highlight'>$1</span>");
@@ -347,15 +354,21 @@ const server = http.createServer((req, res) => {
             
             let countInVerse = 0;
             
+            // Search in French
             let pos = translationFr.indexOf(queryInput.toLowerCase());
             while (pos !== -1) {
               countInVerse++;
               pos = translationFr.indexOf(queryInput.toLowerCase(), pos + 1);
             }
 
+            // Search in Arabic
             if (searchNormalized.length > 0) {
-              const matches = verseTextNormalized.split(searchNormalized).length - 1;
-              countInVerse += matches;
+              // Check if normalized query exists in normalized verse
+              if (verseTextNormalized.includes(searchNormalized)) {
+                 // Estimation of occurrences
+                 const matches = verseTextNormalized.split(searchNormalized).length - 1;
+                 countInVerse += matches;
+              }
             }
 
             if (countInVerse > 0) {
@@ -364,8 +377,8 @@ const server = http.createServer((req, res) => {
                 chapterId: chapter.id,
                 chapterName: chapter.name,
                 verseId: verse.id,
-                text: highlightText(verse.text, queryInput),
-                translation: highlightText(verse.translation, queryInput)
+                text: highlightText(verse.text, queryInput, true),
+                translation: highlightText(verse.translation, queryInput, false)
               });
             }
           });

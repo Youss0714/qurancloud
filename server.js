@@ -240,7 +240,7 @@ const server = http.createServer((req, res) => {
       <div class="subtitle">Recherchez dans 6 236 versets</div>
       
       <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Rechercher un mot, une phrase..." value="ض" oninput="toggleClearBtn()">
+        <input type="text" id="searchInput" placeholder="Rechercher un mot, une phrase..." value="" oninput="toggleClearBtn()">
         <button id="clearBtn" class="clear-btn" onclick="clearSearch()" title="Effacer"><i class="fas fa-times"></i></button>
         <button class="search-btn" onclick="performSearch()">Rechercher</button>
       </div>

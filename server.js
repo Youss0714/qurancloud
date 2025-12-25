@@ -31,8 +31,6 @@ try {
   quranCache = data.map(chapter => {
     const updatedVerses = chapter.verses.map((verse, index) => {
       let verseText = verse.text || "";
-      // Add Bismillah to the beginning of the first verse of each surah (except surah 9)
-      // and if it's not already there
       if (index === 0 && chapter.id !== 9 && !verseText.includes(BISMILLAH)) {
         verseText = BISMILLAH + " " + verseText;
       }
@@ -143,7 +141,78 @@ const server = http.createServer((req, res) => {
       margin: 0;
       background-color: var(--bg-color);
       color: var(--text-color);
+      overflow-x: hidden;
     }
+
+    /* Splash Screen Animation */
+    #splash-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      transition: opacity 0.8s ease-out, visibility 0.8s;
+    }
+    .splash-logo {
+      font-size: 4rem;
+      color: var(--primary-color);
+      margin-bottom: 20px;
+      animation: logo-entrance 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      opacity: 0;
+    }
+    .splash-text {
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: var(--text-color);
+      opacity: 0;
+      animation: fade-in 0.8s ease-out 0.6s forwards;
+    }
+    .splash-loader {
+      margin-top: 30px;
+      width: 40px;
+      height: 40px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid var(--primary-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      opacity: 0;
+      animation: fade-in 0.5s ease-out 1s forwards, spin 1s linear infinite;
+    }
+
+    @keyframes logo-entrance {
+      from { transform: scale(0.5); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    @keyframes fade-in {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .hide-splash {
+      opacity: 0 !important;
+      visibility: hidden !important;
+    }
+
+    /* Main Content Entrance */
+    .app-content {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.8s ease-out;
+    }
+    .show-content {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
     header {
       background: white;
       padding: 1rem 2rem;
@@ -323,46 +392,63 @@ const server = http.createServer((req, res) => {
   </style>
 </head>
 <body>
-  <header>
-    <div class="logo"><i class="fas fa-book-open"></i> Al-Qur'an</div>
-    <div class="nav-right"><i class="fas fa-search"></i> Recherche</div>
-  </header>
-
-  <div class="scroll-nav">
-    <button class="scroll-btn" onclick="scrollToTop()" title="Retour en haut">
-      <i class="fas fa-arrow-up"></i>
-    </button>
-    <button class="scroll-btn" onclick="scrollToBottom()" title="Aller en bas">
-      <i class="fas fa-arrow-down"></i>
-    </button>
+  <!-- Splash Screen -->
+  <div id="splash-screen">
+    <div class="splash-logo"><i class="fas fa-book-open"></i></div>
+    <div class="splash-text">Al-Qur'an</div>
+    <div class="splash-loader"></div>
   </div>
 
-  <div class="container">
-    <div class="search-section">
-      <h1>Al-Quran</h1>
-      <div class="subtitle">Recherchez dans 6 236 versets</div>
-      
-      <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Rechercher un mot, une phrase..." value="" oninput="toggleClearBtn()">
-        <button id="clearBtn" class="clear-btn" onclick="clearSearch()" title="Effacer"><i class="fas fa-times"></i></button>
-        <button class="search-btn" onclick="performSearch()">Rechercher</button>
-      </div>
+  <div class="app-content">
+    <header>
+      <div class="logo"><i class="fas fa-book-open"></i> Al-Qur'an</div>
+      <div class="nav-right"><i class="fas fa-search"></i> Recherche</div>
+    </header>
+
+    <div class="scroll-nav">
+      <button class="scroll-btn" onclick="scrollToTop()" title="Retour en haut">
+        <i class="fas fa-arrow-up"></i>
+      </button>
+      <button class="scroll-btn" onclick="scrollToBottom()" title="Aller en bas">
+        <i class="fas fa-arrow-down"></i>
+      </button>
     </div>
 
-    <div id="loading" class="loading"><i class="fas fa-spinner fa-spin"></i> Chargement...</div>
-    
-    <div id="resultsArea">
-      <div style="margin-top: 5rem;">
-        <div style="background: #e8f8f0; width: 80px; height: 80px; border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto; margin-bottom: 1rem;">
-           <i class="fas fa-book-open" style="font-size: 2rem; color: var(--primary-color);"></i>
+    <div class="container">
+      <div class="search-section">
+        <h1>Al-Quran</h1>
+        <div class="subtitle">Recherchez dans 6 236 versets</div>
+        
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="Rechercher un mot, une phrase..." value="" oninput="toggleClearBtn()">
+          <button id="clearBtn" class="clear-btn" onclick="clearSearch()" title="Effacer"><i class="fas fa-times"></i></button>
+          <button class="search-btn" onclick="performSearch()">Rechercher</button>
         </div>
-        <h3>Prêt à rechercher</h3>
-        <p style="color: #7f8c8d;">Le Coran complet (6236 versets) est chargé. Entrez un mot clé ci-dessus pour l'explorer instantanément.</p>
+      </div>
+
+      <div id="loading" class="loading"><i class="fas fa-spinner fa-spin"></i> Chargement...</div>
+      
+      <div id="resultsArea">
+        <div style="margin-top: 5rem;">
+          <div style="background: #e8f8f0; width: 80px; height: 80px; border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto; margin-bottom: 1rem;">
+             <i class="fas fa-book-open" style="font-size: 2rem; color: var(--primary-color);"></i>
+          </div>
+          <h3>Prêt à rechercher</h3>
+          <p style="color: #7f8c8d;">Le Coran complet (6236 versets) est chargé. Entrez un mot clé ci-dessus pour l'explorer instantanément.</p>
+        </div>
       </div>
     </div>
   </div>
 
   <script>
+    // Splash Screen Logic
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('splash-screen').classList.add('hide-splash');
+        document.querySelector('.app-content').classList.add('show-content');
+      }, 2000); // 2 seconds display
+    });
+
     function toggleClearBtn() {
       const input = document.getElementById('searchInput');
       const clearBtn = document.getElementById('clearBtn');

@@ -12,14 +12,15 @@ function normalize(text) {
   if (!text) return "";
   return text
     .normalize("NFD")
-    .replace(/[\u064B-\u0652\u0670\u06E1\u06D6-\u06ED]/g, "")
+    .replace(/[\u064B-\u0652\u0670\u06E1\u06D6-\u06ED]/g, "") // Diacritics
+    .replace(/[\u0671]/g, "ا") // Alif Wasla ٱ -> ا
     .replace(/[أإآ]/g, "ا")
     .replace(/ؤ/g, "و")
     .replace(/ئ/g, "ي")
     .replace(/ى/g, "ي")
     .replace(/ة/g, "ه")
     .replace(/ء/g, "")
-    .replace(/\u0640/g, "")
+    .replace(/\u0640/g, "") // Tatweel
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -386,8 +387,31 @@ const server = http.createServer((req, res) => {
       
       loading.style.display = 'block';
 
+      function normalize(text) {
+        if (!text) return "";
+        return text
+          .normalize("NFD")
+          .replace(/[\\u064B-\\u0652\\u0670\\u06E1\\u06D6-\\u06ED]/g, "")
+          .replace(/[\\u0671]/g, "ا")
+          .replace(/[أإآ]/g, "ا")
+          .replace(/ؤ/g, "و")
+          .replace(/ئ/g, "ي")
+          .replace(/ى/g, "ي")
+          .replace(/ة/g, "ه")
+          .replace(/ء/g, "")
+          .replace(/\\u0640/g, "")
+          .replace(/\\s+/g, " ")
+          .trim();
+      }
+
       function highlightText(text, term, isArabic = false) {
         if (!term) return text;
+        if (isArabic) {
+           const normText = normalize(text);
+           const normTerm = normalize(term);
+           if (!normText.includes(normTerm)) return text;
+           return "<span class='highlight'>" + text + "</span>";
+        }
         const escapedTerm = term.replace(/[.*+?^$\\{}(\\)|[\]\\\\]/g, '\\\\$&');
         const regex = new RegExp("(" + escapedTerm + ")", "gi");
         return text.replace(regex, "<span class='highlight'>$1</span>");

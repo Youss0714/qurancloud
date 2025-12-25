@@ -298,7 +298,7 @@ const server = http.createServer((req, res) => {
       }
     }
 
-    function normalizeArabic(text) {
+    function normalize(text) {
       if (!text) return '';
       return text
         .replace(/[\\u064B-\\u0652\\u0670\\u06E1]/g, '') // diacritiques + petit alif
@@ -333,7 +333,7 @@ const server = http.createServer((req, res) => {
         const response = await fetch('/quran_fr.json');
         const data = await response.json();
         
-        const searchNormalized = normalizeArabic(queryInput);
+        const searchNormalized = normalize(queryInput);
         let results = [];
         let totalOccurrences = 0;
 
@@ -341,7 +341,7 @@ const server = http.createServer((req, res) => {
           chapter.verses.forEach(verse => {
             const translationFr = (verse.translation || '').toLowerCase();
             const verseText = verse.text || '';
-            const verseTextNormalized = normalizeArabic(verseText);
+            const verseTextNormalized = normalize(verseText);
             
             let countInVerse = 0;
             
@@ -354,11 +354,8 @@ const server = http.createServer((req, res) => {
 
             // Search in Arabic
             if (searchNormalized.length > 0) {
-              let posAr = verseTextNormalized.indexOf(searchNormalized);
-              while (posAr !== -1) {
-                countInVerse++;
-                posAr = verseTextNormalized.indexOf(searchNormalized, posAr + 1);
-              }
+              const matches = verseTextNormalized.split(searchNormalized).length - 1;
+              countInVerse += matches;
             }
 
             if (countInVerse > 0) {

@@ -153,6 +153,33 @@ const server = http.createServer((req, res) => {
     }
     .loading { margin: 2rem; color: var(--primary-color); display: none; }
     
+    .scroll-nav {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 100;
+    }
+    .scroll-btn {
+      background: white;
+      color: var(--primary-color);
+      border: 1px solid #eee;
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      transition: all 0.2s;
+    }
+    .scroll-btn:hover {
+      background: var(--primary-color);
+      color: white;
+    }
     @import url('https://fonts.googleapis.com/css2?family=Amiri&display=swap');
   </style>
 </head>
@@ -161,6 +188,15 @@ const server = http.createServer((req, res) => {
     <div class="logo"><i class="fas fa-book-open"></i> Al-Qur'an</div>
     <div class="nav-right"><i class="fas fa-search"></i> Recherche</div>
   </header>
+
+  <div class="scroll-nav">
+    <button class="scroll-btn" onclick="scrollToTop()" title="Retour en haut">
+      <i class="fas fa-arrow-up"></i>
+    </button>
+    <button class="scroll-btn" onclick="scrollToBottom()" title="Aller en bas">
+      <i class="fas fa-arrow-down"></i>
+    </button>
+  </div>
 
   <div class="container">
     <div class="search-section">
@@ -187,6 +223,24 @@ const server = http.createServer((req, res) => {
   </div>
 
   <script>
+    function scrollToTop() {
+      const container = document.querySelector('.results-container');
+      if (container) {
+        container.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    function scrollToBottom() {
+      const container = document.querySelector('.results-container');
+      if (container) {
+        container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+      } else {
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+      }
+    }
+
     async function performSearch() {
       const query = document.getElementById('searchInput').value.trim();
       if (!query) return;

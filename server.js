@@ -301,18 +301,20 @@ const server = http.createServer((req, res) => {
     function normalizeArabic(text) {
       if (!text) return '';
       return text
-        .normalize("NFD")
-        .replace(/[\\u064B-\\u0652\\u0670\\u06D6-\\u06ED]/g, "") // Remove all vowels and small signs
-        .replace(/[\\u0622\\u0623\\u0625]/g, "\\u0627") // Normalize Alif
-        .replace(/\\u0649/g, "\\u064A") // Alif Maqsura to Ya
-        .replace(/\\u0629/g, "\\u0647") // Teh Marbuta to Heh
-        .replace(/\\s+/g, " ")
+        .replace(/[\\u064B-\\u0652\\u0670\\u06E1]/g, '') // diacritiques + petit alif
+        .replace(/[أإآ]/g, 'ا')
+        .replace(/ؤ/g, 'و')
+        .replace(/ئ/g, 'ي')
+        .replace(/ى/g, 'ي')
+        .replace(/ة/g, 'ه')
+        .replace(/ء/g, '')
+        .replace(/\\u0640/g, '') // tatweel
         .trim();
     }
 
     async function performSearch() {
-      const query = document.getElementById('searchInput').value.trim();
-      if (!query) return;
+      const queryInput = document.getElementById('searchInput').value.trim();
+      if (!queryInput) return;
 
       const loading = document.getElementById('loading');
       const resultsArea = document.getElementById('resultsArea');
@@ -331,24 +333,26 @@ const server = http.createServer((req, res) => {
         const response = await fetch('/quran_fr.json');
         const data = await response.json();
         
-        const searchNormalized = normalizeArabic(query.toLowerCase());
+        const searchNormalized = normalizeArabic(queryInput);
         let results = [];
         let totalOccurrences = 0;
 
         data.forEach(chapter => {
           chapter.verses.forEach(verse => {
             const translationFr = (verse.translation || '').toLowerCase();
-            const verseText = (verse.text || '').toLowerCase();
+            const verseText = verse.text || '';
             const verseTextNormalized = normalizeArabic(verseText);
             
             let countInVerse = 0;
             
-            let pos = translationFr.indexOf(query.toLowerCase());
+            // Search in French
+            let pos = translationFr.indexOf(queryInput.toLowerCase());
             while (pos !== -1) {
               countInVerse++;
-              pos = translationFr.indexOf(query.toLowerCase(), pos + 1);
+              pos = translationFr.indexOf(queryInput.toLowerCase(), pos + 1);
             }
 
+            // Search in Arabic
             if (searchNormalized.length > 0) {
               let posAr = verseTextNormalized.indexOf(searchNormalized);
               while (posAr !== -1) {
@@ -363,8 +367,8 @@ const server = http.createServer((req, res) => {
                 chapterId: chapter.id,
                 chapterName: chapter.name,
                 verseId: verse.id,
-                text: highlightText(verse.text, query),
-                translation: highlightText(verse.translation, query)
+                text: highlightText(verse.text, queryInput),
+                translation: highlightText(verse.translation, queryInput)
               });
             }
           });

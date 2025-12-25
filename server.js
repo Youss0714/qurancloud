@@ -7,6 +7,14 @@ const HOST = '0.0.0.0';
 
 const BISMILLAH = "بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ";
 
+const letterValues = {
+  'ا': 1, 'ب': 2, 'ج': 3, 'د': 4, 'ه': 5, 'و': 6, 'ز': 7, 'ح': 8, 'ط': 9,
+  'ي': 10, 'ك': 20, 'ل': 30, 'م': 40, 'ن': 50, 'ص': 60, 'ع': 70, 'ف': 80, 'ض': 90,
+  'ق': 100, 'ر': 200, 'س': 300, 'ت': 400, 'ث': 500, 'خ': 600, 'ذ': 700, 'ظ': 800, 'غ': 900,
+  'ش': 1000,
+  'أ': 1, 'إ': 1, 'آ': 1, 'ٱ': 1, 'ة': 5, 'ى': 10, 'ئ': 10, 'ؤ': 6
+};
+
 // Cache normalized data at server startup
 let quranCache = null;
 
@@ -24,6 +32,15 @@ function normalize(text) {
     .replace(/\u0640/g, "") // Suppression Tatweel
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function calculateGematria(text) {
+  const norm = normalize(text).replace(/\s+/g, "");
+  let total = 0;
+  for (const char of norm) {
+    total += letterValues[char] || 0;
+  }
+  return total;
 }
 
 try {
@@ -84,6 +101,7 @@ const server = http.createServer((req, res) => {
     }
 
     const searchNormalized = normalize(query);
+    const wordValue = calculateGematria(query);
     let results = [];
     let totalOccurrences = 0;
 
@@ -108,8 +126,16 @@ const server = http.createServer((req, res) => {
       });
     });
 
+    const totalCalculation = wordValue * totalOccurrences;
+
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ results: results.slice(0, 100), totalOccurrences, totalResults: results.length }));
+    res.end(JSON.stringify({ 
+      results: results.slice(0, 100), 
+      totalOccurrences, 
+      totalResults: results.length,
+      wordValue,
+      totalCalculation
+    }));
     return;
   }
   
@@ -126,6 +152,7 @@ const server = http.createServer((req, res) => {
   <style>
     :root {
       --primary-color: #2ecc71;
+      --secondary-color: #e67e22;
       --bg-color: #f8f9fa;
       --text-color: #2c3e50;
     }
@@ -306,6 +333,28 @@ const server = http.createServer((req, res) => {
       opacity: 0.95;
     }
 
+    .stats-container {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+    .stat-card {
+      background: white;
+      padding: 15px 25px;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+      flex: 1;
+      min-width: 150px;
+      max-width: 250px;
+    }
+    .stat-card .label { color: #7f8c8d; font-size: 0.9rem; margin-bottom: 5px; }
+    .stat-card .value { font-size: 1.4rem; font-weight: bold; color: var(--primary-color); }
+    .stat-card.total { background: var(--primary-color); color: white; }
+    .stat-card.total .label { color: rgba(255,255,255,0.8); }
+    .stat-card.total .value { color: white; }
+
     .results-table {
       width: 100%;
       background: white;
@@ -419,7 +468,7 @@ const server = http.createServer((req, res) => {
         </div>
       </div>
 
-      <div id="loading" class="loading"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</div>
+      <div id="loading" class="loading"><i class="fas fa-spinner fa-spin"></i> جari التحميل...</div>
       
       <div id="resultsArea">
         <div style="margin-top: 5rem;">
@@ -519,23 +568,35 @@ const server = http.createServer((req, res) => {
           return;
         }
 
-        let html = "<div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-direction: row-reverse;'>" +
-            "<h2 style='margin: 0;'>النتائج</h2>" +
-            "<div style='background: white; padding: 5px 15px; border-radius: 20px; font-size: 0.9rem; color: #7f8c8d; border: 1px solid #eee;'>" +
-              data.totalOccurrences + " آية وجدت" +
-            "</div>" +
-          "</div>" +
-          "<div class='results-container'>" +
-            "<table class='results-table'>" +
-              "<thead class='table-header-fixed'>" +
-                "<tr>" +
-                  "<th style='width: 50px;'>رقم</th>" +
-                  "<th style='width: 100px;'>السورة</th>" +
-                  "<th style='width: 50px;'>الآية</th>" +
-                  "<th>النص</th>" +
-                "</tr>" +
-              "</thead>" +
-              "<tbody>";
+        let html = \`
+          <div class="stats-container">
+            <div class="stat-card">
+              <div class="label">عدد الآيات</div>
+              <div class="value">\${data.totalOccurrences}</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">القيمة العددية</div>
+              <div class="value">\${data.wordValue}</div>
+            </div>
+            <div class="stat-card total">
+              <div class="label">الإجمالي الحسابي</div>
+              <div class="value">\${data.totalCalculation.toLocaleString()}</div>
+            </div>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-direction: row-reverse;">
+            <h2 style="margin: 0;">نتائج البحث</h2>
+          </div>
+          <div class='results-container'>
+            <table class='results-table'>
+              <thead class='table-header-fixed'>
+                <tr>
+                  <th style='width: 50px;'>رقم</th>
+                  <th style='width: 100px;'>السورة</th>
+                  <th style='width: 50px;'>الآية</th>
+                  <th>النص</th>
+                </tr>
+              </thead>
+              <tbody>\`;
 
         data.results.forEach(res => {
           html += "<tr>" +
@@ -569,7 +630,7 @@ const server = http.createServer((req, res) => {
   </script>
 </body>
 </html>
-`);
+\`);
     return;
   }
 

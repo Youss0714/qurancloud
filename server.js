@@ -5,11 +5,36 @@ const path = require('path');
 const PORT = 5000;
 const HOST = '0.0.0.0';
 
-// Pre-load data to make search instant
-let quranData = null;
+// Cache normalized data at server startup
+let quranCache = null;
+
+function normalize(text) {
+  if (!text) return "";
+  return text
+    .normalize("NFD")
+    .replace(/[\u064B-\u0652\u0670\u06E1\u06D6-\u06ED]/g, "")
+    .replace(/[أإآ]/g, "ا")
+    .replace(/ؤ/g, "و")
+    .replace(/ئ/g, "ي")
+    .replace(/ى/g, "ي")
+    .replace(/ة/g, "ه")
+    .replace(/ء/g, "")
+    .replace(/\u0640/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 try {
-  quranData = JSON.parse(fs.readFileSync('./quran_fr.json', 'utf8'));
-  console.log('Quran data pre-loaded for fast search');
+  const data = JSON.parse(fs.readFileSync('./quran_fr.json', 'utf8'));
+  quranCache = data.map(chapter => ({
+    ...chapter,
+    verses: chapter.verses.map(verse => ({
+      ...verse,
+      normText: normalize(verse.text || ""),
+      lowerTrans: (verse.translation || "").toLowerCase()
+    }))
+  }));
+  console.log('Quran data pre-loaded and normalized');
 } catch (err) {
   console.error('Error pre-loading Quran data:', err);
 }
@@ -27,11 +52,56 @@ const server = http.createServer((req, res) => {
   }
 
   const url = req.url.split('?')[0];
-  let filePath = '.' + url;
   
   if (url === '/favicon.ico') {
     res.writeHead(204);
     res.end();
+    return;
+  }
+
+  // Handle Search API
+  if (url === '/api/search') {
+    const query = new URL(req.url, `http://${req.headers.host}`).searchParams.get('q');
+    if (!query) {
+      res.writeHead(400);
+      res.end(JSON.stringify({ error: 'Missing query' }));
+      return;
+    }
+
+    const searchNormalized = normalize(query);
+    const lowerQuery = query.toLowerCase();
+    let results = [];
+    let totalOccurrences = 0;
+
+    quranCache.forEach(chapter => {
+      chapter.verses.forEach(verse => {
+        let countInVerse = 0;
+        let pos = verse.lowerTrans.indexOf(lowerQuery);
+        while (pos !== -1) {
+          countInVerse++;
+          pos = verse.lowerTrans.indexOf(lowerQuery, pos + 1);
+        }
+
+        if (searchNormalized && verse.normText.includes(searchNormalized)) {
+          const matches = verse.normText.split(searchNormalized).length - 1;
+          countInVerse += matches;
+        }
+
+        if (countInVerse > 0) {
+          totalOccurrences += countInVerse;
+          results.push({
+            chapterId: chapter.id,
+            chapterName: chapter.name,
+            verseId: verse.id,
+            text: verse.text,
+            translation: verse.translation
+          });
+        }
+      });
+    });
+
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ results: results.slice(0, 100), totalOccurrences, totalResults: results.length }));
     return;
   }
   
@@ -270,14 +340,12 @@ const server = http.createServer((req, res) => {
            <i class="fas fa-book-open" style="font-size: 2rem; color: var(--primary-color);"></i>
         </div>
         <h3>Prêt à rechercher</h3>
-        <p style="color: #7f8c8d;">Le Coran complet (6236 versets) est chargé. Entrez un mot clé ci-dessus pour l'explorer instantanément, même hors ligne.</p>
+        <p style="color: #7f8c8d;">Le Coran complet (6236 versets) est chargé. Entrez un mot clé ci-dessus pour l'explorer instantanément.</p>
       </div>
     </div>
   </div>
 
   <script>
-    let quranCache = null;
-
     function toggleClearBtn() {
       const input = document.getElementById('searchInput');
       const clearBtn = document.getElementById('clearBtn');
@@ -309,22 +377,6 @@ const server = http.createServer((req, res) => {
       }
     }
 
-    function normalize(text) {
-      if (!text) return "";
-      return text
-        .normalize("NFD")
-        .replace(/[\\u064B-\\u0652\\u0670\\u06E1\\u06D6-\\u06ED]/g, "")
-        .replace(/[أإآ]/g, "ا")
-        .replace(/ؤ/g, "و")
-        .replace(/ئ/g, "ي")
-        .replace(/ى/g, "ي")
-        .replace(/ة/g, "ه")
-        .replace(/ء/g, "")
-        .replace(/\\u0640/g, "")
-        .replace(/\\s+/g, " ")
-        .trim();
-    }
-
     async function performSearch() {
       const queryInput = document.getElementById('searchInput').value.trim();
       if (!queryInput) return;
@@ -333,71 +385,21 @@ const server = http.createServer((req, res) => {
       const resultsArea = document.getElementById('resultsArea');
       
       loading.style.display = 'block';
-      
+
       function highlightText(text, term, isArabic = false) {
         if (!term) return text;
-        if (isArabic) {
-           const normText = normalize(text);
-           const normTerm = normalize(term);
-           if (!normText.includes(normTerm)) return text;
-           return "<span class='highlight'>" + text + "</span>";
-        }
         const escapedTerm = term.replace(/[.*+?^$\\{}(\\)|[\]\\\\]/g, '\\\\$&');
         const regex = new RegExp("(" + escapedTerm + ")", "gi");
         return text.replace(regex, "<span class='highlight'>$1</span>");
       }
 
       try {
-        if (!quranCache) {
-          const response = await fetch("/quran_fr.json");
-          quranCache = await response.json();
-          // Pre-normalize Arabic text in cache for faster search
-          quranCache.forEach(chapter => {
-            chapter.verses.forEach(verse => {
-              verse.normText = normalize(verse.text || "");
-              verse.lowerTrans = (verse.translation || "").toLowerCase();
-            });
-          });
-        }
+        const response = await fetch(\`/api/search?q=\${encodeURIComponent(queryInput)}\`);
+        const data = await response.json();
         
-        const searchNormalized = normalize(queryInput);
-        const lowerQuery = queryInput.toLowerCase();
-        let results = [];
-        let totalOccurrences = 0;
-
-        quranCache.forEach(chapter => {
-          chapter.verses.forEach(verse => {
-            let countInVerse = 0;
-            
-            // Search in French
-            let pos = verse.lowerTrans.indexOf(lowerQuery);
-            while (pos !== -1) {
-              countInVerse++;
-              pos = verse.lowerTrans.indexOf(lowerQuery, pos + 1);
-            }
-
-            // Search in Arabic
-            if (searchNormalized && verse.normText.includes(searchNormalized)) {
-              const matches = verse.normText.split(searchNormalized).length - 1;
-              countInVerse += matches;
-            }
-
-            if (countInVerse > 0) {
-              totalOccurrences += countInVerse;
-              results.push({
-                chapterId: chapter.id,
-                chapterName: chapter.name,
-                verseId: verse.id,
-                text: highlightText(verse.text, queryInput, true),
-                translation: highlightText(verse.translation, queryInput, false)
-              });
-            }
-          });
-        });
-
         loading.style.display = "none";
 
-        if (results.length === 0) {
+        if (data.results.length === 0) {
           resultsArea.innerHTML = "<p>Aucun résultat trouvé.</p>";
           return;
         }
@@ -405,7 +407,7 @@ const server = http.createServer((req, res) => {
         let html = "<div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;'>" +
             "<h2 style='margin: 0;'>Résultats</h2>" +
             "<div style='background: white; padding: 5px 15px; border-radius: 20px; font-size: 0.9rem; color: #7f8c8d; border: 1px solid #eee;'>" +
-              totalOccurrences + " occurrences trouvées" +
+              data.totalOccurrences + " occurrences trouvées" +
             "</div>" +
           "</div>" +
           "<div class='results-container'>" +
@@ -420,20 +422,20 @@ const server = http.createServer((req, res) => {
               "</thead>" +
               "<tbody>";
 
-        results.slice(0, 100).forEach(res => {
+        data.results.forEach(res => {
           html += "<tr>" +
               "<td style='font-weight: bold;'>" + res.chapterId + "</td>" +
               "<td>" + res.chapterName + "</td>" +
               "<td>" + res.verseId + "</td>" +
               "<td>" +
-                "<div class='arabic-text'>" + res.text + "</div>" +
-                "<div class='french-text'>" + res.translation + "</div>" +
+                "<div class='arabic-text'>" + highlightText(res.text, queryInput, true) + "</div>" +
+                "<div class='french-text'>" + highlightText(res.translation, queryInput, false) + "</div>" +
               "</td>" +
             "</tr>";
         });
 
         html += "</tbody></table></div>";
-        if (results.length > 100) {
+        if (data.totalResults > 100) {
           html += "<p style='margin-top: 1rem; color: #7f8c8d;'>Affichage des 100 premiers résultats...</p>";
         }
         resultsArea.innerHTML = html;
@@ -444,6 +446,12 @@ const server = http.createServer((req, res) => {
         resultsArea.innerHTML = "<p>Erreur lors de la recherche.</p>";
       }
     }
+    
+    document.getElementById('searchInput').addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') {
+        performSearch();
+      }
+    });
   </script>
 </body>
 </html>
@@ -451,6 +459,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  let filePath = '.' + url;
   if (!filePath.endsWith('.json') && !filePath.includes('.')) {
     filePath = filePath + '.json';
   }

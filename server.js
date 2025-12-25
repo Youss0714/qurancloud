@@ -299,16 +299,18 @@ const server = http.createServer((req, res) => {
     }
 
     function normalize(text) {
-      if (!text) return '';
+      if (!text) return "";
       return text
-        .replace(/[\\u064B-\\u0652\\u0670\\u06E1]/g, '') // diacritiques + petit alif
-        .replace(/[أإآ]/g, 'ا')
-        .replace(/ؤ/g, 'و')
-        .replace(/ئ/g, 'ي')
-        .replace(/ى/g, 'ي')
-        .replace(/ة/g, 'ه')
-        .replace(/ء/g, '')
-        .replace(/\\u0640/g, '') // tatweel
+        .normalize("NFD")
+        .replace(/[\\u064B-\\u0652\\u0670\\u06E1\\u06D6-\\u06ED]/g, "") // Diacritics + Small Alif + Marks
+        .replace(/[أإآ]/g, "ا")
+        .replace(/ؤ/g, "و")
+        .replace(/ئ/g, "ي")
+        .replace(/ى/g, "ي")
+        .replace(/ة/g, "ه")
+        .replace(/ء/g, "")
+        .replace(/\\u0640/g, "")
+        .replace(/\\s+/g, " ")
         .trim();
     }
 
@@ -325,12 +327,12 @@ const server = http.createServer((req, res) => {
       function highlightText(text, term) {
         if (!term) return text;
         const escapedTerm = term.replace(/[.*+?^$\\{}(\\)|[\]\\\\]/g, '\\\\$&');
-        const regex = new RegExp('(' + escapedTerm + ')', 'gi');
-        return text.replace(regex, '<span class="highlight">\$1</span>');
+        const regex = new RegExp("(" + escapedTerm + ")", "gi");
+        return text.replace(regex, "<span class=\"highlight\">\$1</span>");
       }
 
       try {
-        const response = await fetch('/quran_fr.json');
+        const response = await fetch("/quran_fr.json");
         const data = await response.json();
         
         const searchNormalized = normalize(queryInput);
@@ -339,8 +341,8 @@ const server = http.createServer((req, res) => {
 
         data.forEach(chapter => {
           chapter.verses.forEach(verse => {
-            const translationFr = (verse.translation || '').toLowerCase();
-            const verseText = verse.text || '';
+            const translationFr = (verse.translation || "").toLowerCase();
+            const verseText = verse.text || "";
             const verseTextNormalized = normalize(verseText);
             
             let countInVerse = 0;
@@ -371,53 +373,53 @@ const server = http.createServer((req, res) => {
           });
         });
 
-        loading.style.display = 'none';
+        loading.style.display = "none";
 
         if (results.length === 0) {
-          resultsArea.innerHTML = '<p>Aucun résultat trouvé.</p>';
+          resultsArea.innerHTML = "<p>Aucun résultat trouvé.</p>";
           return;
         }
 
-        let html = '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">' +
-            '<h2 style="margin: 0;">Résultats</h2>' +
-            '<div style="background: white; padding: 5px 15px; border-radius: 20px; font-size: 0.9rem; color: #7f8c8d; border: 1px solid #eee;">' +
-              totalOccurrences + ' occurrences trouvées' +
-            '</div>' +
-          '</div>' +
-          '<div class="results-container">' +
-            '<table class="results-table">' +
-              '<thead class="table-header-fixed">' +
-                '<tr>' +
-                  '<th style="width: 50px;">Num</th>' +
-                  '<th style="width: 100px;">Sourat</th>' +
-                  '<th style="width: 50px;">Verset</th>' +
-                  '<th>Texte</th>' +
-                '</tr>' +
-              '</thead>' +
-              '<tbody>';
+        let html = "<div style=\"display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;\">" +
+            "<h2 style=\"margin: 0;\">Résultats</h2>" +
+            "<div style=\"background: white; padding: 5px 15px; border-radius: 20px; font-size: 0.9rem; color: #7f8c8d; border: 1px solid #eee;\">" +
+              totalOccurrences + " occurrences trouvées" +
+            "</div>" +
+          "</div>" +
+          "<div class=\"results-container\">" +
+            "<table class=\"results-table\">" +
+              "<thead class=\"table-header-fixed\">" +
+                "<tr>" +
+                  "<th style=\"width: 50px;\">Num</th>" +
+                  "<th style=\"width: 100px;\">Sourat</th>" +
+                  "<th style=\"width: 50px;\">Verset</th>" +
+                  "<th>Texte</th>" +
+                "</tr>" +
+              "</thead>" +
+              "<tbody>";
 
         results.slice(0, 100).forEach(res => {
-          html += '<tr>' +
-              '<td style="font-weight: bold;">' + res.chapterId + '</td>' +
-              '<td>' + res.chapterName + '</td>' +
-              '<td>' + res.verseId + '</td>' +
-              '<td>' +
-                '<div class="arabic-text">' + res.text + '</div>' +
-                '<div class="french-text">' + res.translation + '</div>' +
-              '</td>' +
-            '</tr>';
+          html += "<tr>" +
+              "<td style=\"font-weight: bold;\">" + res.chapterId + "</td>" +
+              "<td>" + res.chapterName + "</td>" +
+              "<td>" + res.verseId + "</td>" +
+              "<td>" +
+                "<div class=\"arabic-text\">" + res.text + "</div>" +
+                "<div class=\"french-text\">" + res.translation + "</div>" +
+              "</td>" +
+            "</tr>";
         });
 
-        html += '</tbody></table></div>';
+        html += "</tbody></table></div>";
         if (results.length > 100) {
-          html += '<p style="margin-top: 1rem; color: #7f8c8d;">Affichage des 100 premiers résultats...</p>';
+          html += "<p style=\"margin-top: 1rem; color: #7f8c8d;\">Affichage des 100 premiers résultats...</p>";
         }
         resultsArea.innerHTML = html;
 
       } catch (err) {
         console.error(err);
-        loading.style.display = 'none';
-        resultsArea.innerHTML = '<p>Erreur lors de la recherche.</p>';
+        loading.style.display = "none";
+        resultsArea.innerHTML = "<p>Erreur lors de la recherche.</p>";
       }
     }
   </script>

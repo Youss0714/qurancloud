@@ -80,49 +80,69 @@ const server = http.createServer((req, res) => {
     
     .search-box {
       display: flex;
-      gap: 10px;
+      gap: 15px;
       background: white;
-      padding: 5px;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-      max-width: 700px;
+      padding: 8px;
+      border-radius: 50px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      max-width: 850px;
       margin: 0 auto;
       position: relative;
       align-items: center;
+      border: 1px solid #f0f0f0;
+      transition: all 0.3s ease;
+    }
+    .search-box:focus-within {
+      box-shadow: 0 6px 25px rgba(46, 204, 113, 0.15);
+      border-color: var(--primary-color);
     }
     .search-box input {
       flex: 1;
-      border: 1px solid #eee;
-      padding: 12px 40px 12px 20px;
-      border-radius: 8px;
-      font-size: 1rem;
+      border: none;
+      padding: 15px 45px 15px 30px;
+      border-radius: 50px;
+      font-size: 1.1rem;
       outline: none;
+      background: transparent;
     }
     .clear-btn {
       position: absolute;
-      right: 145px;
-      background: none;
+      right: 170px;
+      background: #f8f9fa;
       border: none;
-      color: #bdc3c7;
+      color: #95a5a6;
       cursor: pointer;
-      font-size: 1.2rem;
+      font-size: 1rem;
       display: none;
-      padding: 5px;
+      padding: 0;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      line-height: 28px;
+      transition: all 0.2s;
     }
     .clear-btn:hover {
-      color: #7f8c8d;
+      background: #edeff1;
+      color: #2c3e50;
     }
     .search-btn {
       background: var(--primary-color);
       color: white;
       border: none;
-      padding: 0 25px;
-      border-radius: 8px;
-      font-weight: bold;
+      padding: 0 35px;
+      height: 50px;
+      border-radius: 40px;
+      font-weight: 600;
+      font-size: 1rem;
       cursor: pointer;
-      transition: opacity 0.2s;
+      transition: all 0.3s;
+      box-shadow: 0 4px 12px rgba(46, 204, 113, 0.2);
     }
-    .search-btn:hover { opacity: 0.9; }
+    .search-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(46, 204, 113, 0.3);
+      opacity: 0.95;
+    }
 
     .results-table {
       width: 100%;

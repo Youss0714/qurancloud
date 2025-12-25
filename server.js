@@ -302,7 +302,7 @@ const server = http.createServer((req, res) => {
       if (!text) return "";
       return text
         .normalize("NFD")
-        .replace(/[\\u064B-\\u0652\\u0670\\u06E1\\u06D6-\\u06ED]/g, "") // Diacritics + Small Alif + Marks
+        .replace(/[\\u064B-\\u0652\\u0670\\u06E1\\u06D6-\\u06ED]/g, "")
         .replace(/[أإآ]/g, "ا")
         .replace(/ؤ/g, "و")
         .replace(/ئ/g, "ي")
@@ -328,7 +328,7 @@ const server = http.createServer((req, res) => {
         if (!term) return text;
         const escapedTerm = term.replace(/[.*+?^$\\{}(\\)|[\]\\\\]/g, '\\\\$&');
         const regex = new RegExp("(" + escapedTerm + ")", "gi");
-        return text.replace(regex, "<span class=\"highlight\">\$1</span>");
+        return text.replace(regex, "<span class='highlight'>$1</span>");
       }
 
       try {
@@ -347,14 +347,12 @@ const server = http.createServer((req, res) => {
             
             let countInVerse = 0;
             
-            // Search in French
             let pos = translationFr.indexOf(queryInput.toLowerCase());
             while (pos !== -1) {
               countInVerse++;
               pos = translationFr.indexOf(queryInput.toLowerCase(), pos + 1);
             }
 
-            // Search in Arabic
             if (searchNormalized.length > 0) {
               const matches = verseTextNormalized.split(searchNormalized).length - 1;
               countInVerse += matches;
@@ -380,19 +378,19 @@ const server = http.createServer((req, res) => {
           return;
         }
 
-        let html = "<div style=\"display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;\">" +
-            "<h2 style=\"margin: 0;\">Résultats</h2>" +
-            "<div style=\"background: white; padding: 5px 15px; border-radius: 20px; font-size: 0.9rem; color: #7f8c8d; border: 1px solid #eee;\">" +
+        let html = "<div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;'>" +
+            "<h2 style='margin: 0;'>Résultats</h2>" +
+            "<div style='background: white; padding: 5px 15px; border-radius: 20px; font-size: 0.9rem; color: #7f8c8d; border: 1px solid #eee;'>" +
               totalOccurrences + " occurrences trouvées" +
             "</div>" +
           "</div>" +
-          "<div class=\"results-container\">" +
-            "<table class=\"results-table\">" +
-              "<thead class=\"table-header-fixed\">" +
+          "<div class='results-container'>" +
+            "<table class='results-table'>" +
+              "<thead class='table-header-fixed'>" +
                 "<tr>" +
-                  "<th style=\"width: 50px;\">Num</th>" +
-                  "<th style=\"width: 100px;\">Sourat</th>" +
-                  "<th style=\"width: 50px;\">Verset</th>" +
+                  "<th style='width: 50px;'>Num</th>" +
+                  "<th style='width: 100px;'>Sourat</th>" +
+                  "<th style='width: 50px;'>Verset</th>" +
                   "<th>Texte</th>" +
                 "</tr>" +
               "</thead>" +
@@ -400,19 +398,19 @@ const server = http.createServer((req, res) => {
 
         results.slice(0, 100).forEach(res => {
           html += "<tr>" +
-              "<td style=\"font-weight: bold;\">" + res.chapterId + "</td>" +
+              "<td style='font-weight: bold;'>" + res.chapterId + "</td>" +
               "<td>" + res.chapterName + "</td>" +
               "<td>" + res.verseId + "</td>" +
               "<td>" +
-                "<div class=\"arabic-text\">" + res.text + "</div>" +
-                "<div class=\"french-text\">" + res.translation + "</div>" +
+                "<div class='arabic-text'>" + res.text + "</div>" +
+                "<div class='french-text'>" + res.translation + "</div>" +
               "</td>" +
             "</tr>";
         });
 
         html += "</tbody></table></div>";
         if (results.length > 100) {
-          html += "<p style=\"margin-top: 1rem; color: #7f8c8d;\">Affichage des 100 premiers résultats...</p>";
+          html += "<p style='margin-top: 1rem; color: #7f8c8d;'>Affichage des 100 premiers résultats...</p>";
         }
         resultsArea.innerHTML = html;
 

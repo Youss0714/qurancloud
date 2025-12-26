@@ -72,7 +72,7 @@ function normalizeForLetterCount(text) {
     .replace(/ؤ/g, "و") // Normalisation Waw
     .replace(/[ئى]/g, "ي") // Normalisation Ya et Ya Hamza
     .replace(/ة/g, "ه") // Normalisation Ta Marbuta
-    .replace(/ء/g, "") // Suppression Hamza isolée
+    .replace(/ء/g, "ا") // Hamza isolée -> Alif (standard in some gematria systems)
     .replace(/\u0640/g, "") // Suppression Tatweel
     .replace(/\s+/g, " ")
     .trim();
@@ -773,7 +773,7 @@ const server = http.createServer((req, res) => {
         .replace(/ؤ/g, "و")
         .replace(/[ئى]/g, "ي")
         .replace(/ة/g, "ه")
-        .replace(/ء/g, "")
+        .replace(/ء/g, "ا")
         .replace(/\u0640/g, "")
         .replace(/\s+/g, " ")
         .trim();

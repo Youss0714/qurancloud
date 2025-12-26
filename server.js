@@ -840,13 +840,12 @@ const server = http.createServer((req, res) => {
           html += "<div style='font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.5rem;'>Nombre total de lettres</div>";
           html += "<div style='font-size: 2.5rem; font-weight: bold;'>" + totalLetters + "</div>";
           
-          // Display individual letters for total count
+          // Display ALL individual letters including duplicates
           html += "<div style='margin-top: 1rem; font-size: 1.2rem; display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; direction: rtl;'>";
-          Object.entries(data.letterCounts).forEach(([letter, count]) => {
-            if (count > 0) {
-              html += "<span title='" + count + "' style='background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 4px;'>" + letter + "</span>";
-            }
-          });
+          const queryNorm = normalize(queryInput).replace(/\s+/g, "");
+          for (const char of queryNorm) {
+            html += "<span style='background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 4px;'>" + char + "</span>";
+          }
           html += "</div>";
           html += "</div>";
           

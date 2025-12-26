@@ -58,7 +58,14 @@ function normalize(text) {
     .replace(/\s+/g, " ")
     .trim();
   
+  // Create a secondary version that is even more flexible (ignores all Alifs)
+  // this will be used as a fallback if the primary search returns no results
   return normalized;
+}
+
+function normalizeFlexible(text) {
+  if (!text) return "";
+  return normalize(text).replace(/ا/g, "");
 }
 
 function normalizeForLetterCount(text) {
@@ -253,6 +260,7 @@ const server = http.createServer((req, res) => {
     }
 
     const searchNormalized = normalize(query);
+    const searchFlexible = normalizeFlexible(query);
     const wordValue = calculateGematria(query);
     let results = [];
     let totalOccurrences = 0;
@@ -261,8 +269,16 @@ const server = http.createServer((req, res) => {
       chapter.verses.forEach(verse => {
         let countInVerse = 0;
 
+        // Try exact match first
         if (searchNormalized && verse.normText.includes(searchNormalized)) {
           const matches = verse.normText.split(searchNormalized).length - 1;
+          countInVerse += matches;
+        } 
+        // Fallback to flexible match (ignoring Alifs) if no exact match found in this verse
+        // AND the user's query is not just a single short word to avoid too many false positives
+        else if (query.length > 3 && searchFlexible && normalizeFlexible(verse.text).includes(searchFlexible)) {
+          // This allows finding "القرآن" even if spelled with different Alifs
+          const matches = normalizeFlexible(verse.text).split(searchFlexible).length - 1;
           countInVerse += matches;
         }
 
@@ -781,10 +797,21 @@ const server = http.createServer((req, res) => {
 
       function highlightText(text, term) {
         if (!term) return text;
+        
+        // Try to highlight exact normalized match
         const normText = normalizeForLetterCount(text);
         const normTerm = normalizeForLetterCount(term);
-        if (!normText.includes(normTerm)) return text;
-        return "<span class='highlight'>" + text + "</span>";
+        if (normText.includes(normTerm)) {
+          return "<span class='highlight'>" + text + "</span>";
+        }
+        
+        // Fallback: If no exact match, check for flexible match (ignoring Alifs)
+        function flex(t) { return normalizeForLetterCount(t).replace(/ا/g, ""); }
+        if (flex(text).includes(flex(term))) {
+          return "<span class='highlight'>" + text + "</span>";
+        }
+
+        return text;
       }
 
       try {

@@ -52,6 +52,15 @@ function calculateModulo98(N, O) {
   return D;
 }
 
+function calculateModulo66(N, O) {
+  const P = N * O;
+  const Q = P / 66;
+  const E = Math.floor(Q);
+  const R = E * 66;
+  const D = P - R;
+  return D;
+}
+
 try {
   // Use the Arabic only file
   const data = JSON.parse(fs.readFileSync('./quran.json', 'utf8'));
@@ -137,6 +146,7 @@ const server = http.createServer((req, res) => {
 
     const totalCalculation = wordValue * totalOccurrences;
     const modulo98Result = calculateModulo98(wordValue, totalOccurrences);
+    const modulo66Result = calculateModulo66(wordValue, totalOccurrences);
 
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ 
@@ -145,7 +155,8 @@ const server = http.createServer((req, res) => {
       totalResults: results.length,
       wordValue,
       totalCalculation,
-      modulo98Result
+      modulo98Result,
+      modulo66Result
     }));
     return;
   }
@@ -595,6 +606,10 @@ const server = http.createServer((req, res) => {
             <div class="stat-card">
               <div class="label">T/98</div>
               <div class="value">\${data.modulo98Result}</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">T/66</div>
+              <div class="value">\${data.modulo66Result}</div>
             </div>
           </div>
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-direction: row-reverse;">

@@ -29,6 +29,7 @@ This project serves Quran data in JSON format as a REST API, providing access to
 - Native HTTP module (no external dependencies)
 
 ## Recent Changes
+- December 26, 2025: Enhanced table styling with proper borders and clear column/row separation
 - December 26, 2025: Added modulo 92 calculation function (T/92)
 - December 26, 2025: Added modulo 66 calculation function (T/66)
 - December 26, 2025: Added modulo 98 calculation function (T/98) to display remainder of (N*O) divided by 98

@@ -391,8 +391,8 @@ const server = http.createServer((req, res) => {
       width: 100%;
       background: white;
       border-collapse: collapse;
-      border-radius: 10px;
       direction: rtl;
+      border: 2px solid #2c3e50;
     }
     .results-container {
       max-height: 600px;
@@ -405,20 +405,36 @@ const server = http.createServer((req, res) => {
     .table-header-fixed {
       position: sticky;
       top: 0;
-      background: #f1f3f5;
+      background: #2c3e50;
+      color: white;
       z-index: 10;
     }
     .results-table th {
-      padding: 15px;
+      padding: 18px 15px;
       text-align: right;
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      color: #7f8c8d;
+      font-size: 0.85rem;
+      font-weight: 700;
+      border-right: 2px solid #2c3e50;
+      color: white;
+      letter-spacing: 0.5px;
+    }
+    .results-table th:last-child {
+      border-right: none;
     }
     .results-table td {
-      padding: 20px 15px;
-      border-bottom: 1px solid #eee;
+      padding: 18px 15px;
+      border-bottom: 1px solid #ddd;
+      border-right: 2px solid #ddd;
       text-align: right;
+    }
+    .results-table td:last-child {
+      border-right: none;
+    }
+    .results-table tbody tr:last-child td {
+      border-bottom: 2px solid #2c3e50;
+    }
+    .results-table tbody tr:hover {
+      background-color: #f8f9fa;
     }
     .arabic-text {
       font-family: 'Amiri', serif;

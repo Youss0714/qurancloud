@@ -771,31 +771,12 @@ const server = http.createServer((req, res) => {
 
         html += "</tbody></table></div>";
         
-        // Add letter count table at the bottom
+        // Add total letter count at the bottom
         if (data.letterCounts) {
-          html += "<div style='margin-top: 2rem; padding: 1rem; background-color: #ecf0f1; border-radius: 8px;'>";
-          html += "<h3 style='margin-top: 0; text-align: center; color: #2c3e50;'>تكوين الحروف في البحث</h3>";
-          html += "<table style='width: 100%; border-collapse: collapse; direction: rtl;'>";
-          html += "<thead>";
-          html += "<tr style='background-color: #34495e; color: white;'>";
-          html += "<th style='padding: 0.5rem; border: 1px solid #95a5a6; text-align: center;'>الحرف</th>";
-          html += "<th style='padding: 0.5rem; border: 1px solid #95a5a6; text-align: center;'>العدد</th>";
-          html += "</tr>";
-          html += "</thead>";
-          html += "<tbody>";
-          
-          const letters = Object.keys(data.letterCounts).sort();
-          letters.forEach(letter => {
-            const count = data.letterCounts[letter];
-            if (count > 0) {
-              html += "<tr>";
-              html += "<td style='padding: 0.5rem; border: 1px solid #95a5a6; text-align: center; font-weight: bold; font-size: 1.1em;'>" + letter + "</td>";
-              html += "<td style='padding: 0.5rem; border: 1px solid #95a5a6; text-align: center;'>" + count + "</td>";
-              html += "</tr>";
-            }
-          });
-          html += "</tbody>";
-          html += "</table>";
+          const totalLetters = Object.values(data.letterCounts).reduce((sum, count) => sum + count, 0);
+          html += "<div style='margin-top: 2rem; padding: 1.5rem; background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); border-radius: 8px; text-align: center; color: white;'>";
+          html += "<div style='font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.5rem;'>عدد الحروف في البحث</div>";
+          html += "<div style='font-size: 2.5rem; font-weight: bold;'>" + totalLetters + "</div>";
           html += "</div>";
         }
         

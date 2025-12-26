@@ -29,10 +29,10 @@ This project serves Quran data in JSON format as a REST API, providing access to
 - Native HTTP module (no external dependencies)
 
 ## Recent Changes
+- December 26, 2025: Updated letter count to display TOTAL number of letters in search query
 - December 26, 2025: Added letter count display at bottom of results showing Arabic alphabet composition of search query
 - December 26, 2025: Made app installable as PWA on Android/iOS with manifest.json and service worker
 - December 26, 2025: Made app fully offline-capable by serving Font Awesome and Amiri fonts locally
-- December 26, 2025: Enhanced table styling with proper borders and clear column/row separation
 
 ## Offline Functionality
 ✅ **App now works completely offline:**

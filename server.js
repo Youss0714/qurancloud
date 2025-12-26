@@ -268,7 +268,7 @@ const server = http.createServer((req, res) => {
     let results = [];
     let totalOccurrences = 0;
 
-    const isCommonName = query === "الله" || query === "اللَّه";
+    const isCommonName = query === "الله" || query === "اللَّه" || query === "لله" || query === "للَّه";
 
     quranCache.forEach(chapter => {
       chapter.verses.forEach(verse => {

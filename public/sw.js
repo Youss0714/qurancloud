@@ -1,4 +1,5 @@
-const CACHE_NAME = 'quran-v3';
+const CACHE_NAME = 'quran-v4';
+const DATA_CACHE_NAME = 'quran-data-v1';
 const urlsToCache = [
   '/',
   '/css/all-local.min.css',
@@ -12,6 +13,7 @@ const urlsToCache = [
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
+      console.log('Caching essential assets');
       return cache.addAll(urlsToCache);
     })
   );
@@ -23,7 +25,8 @@ self.addEventListener('activate', event => {
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
+          if (cacheName !== CACHE_NAME && cacheName !== DATA_CACHE_NAME) {
+            console.log('Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
@@ -38,28 +41,35 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Network-first strategy for index and search API to avoid stale data
-  if (event.request.url.includes('/api/search') || event.request.url.endsWith('/')) {
+  // Strategy for API calls: Network first, then fall back to cache
+  if (event.request.url.includes('/api/search')) {
     event.respondWith(
-      fetch(event.request).then(response => {
-        const responseToCache = response.clone();
-        caches.open(CACHE_NAME).then(cache => {
-          cache.put(event.request, responseToCache);
-        });
-        return response;
-      }).catch(() => caches.match(event.request))
+      fetch(event.request)
+        .then(response => {
+          // If network is available, update data cache
+          const responseToCache = response.clone();
+          caches.open(DATA_CACHE_NAME).then(cache => {
+            cache.put(event.request, responseToCache);
+          });
+          return response;
+        })
+        .catch(() => {
+          // If network fails, try to serve from data cache
+          return caches.match(event.request);
+        })
     );
     return;
   }
 
+  // Strategy for assets: Cache first, then fall back to network
   event.respondWith(
     caches.match(event.request).then(response => {
-      return response || fetch(event.request).then(response => {
-        const responseToCache = response.clone();
+      return response || fetch(event.request).then(networkResponse => {
+        const responseToCache = networkResponse.clone();
         caches.open(CACHE_NAME).then(cache => {
           cache.put(event.request, responseToCache);
         });
-        return response;
+        return networkResponse;
       });
     })
   );

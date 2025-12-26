@@ -929,12 +929,28 @@ const server = http.createServer((req, res) => {
     
     // Register Service Worker for offline support
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').then(registration => {
-        console.log('Service Worker registered:', registration);
-      }).catch(error => {
-        console.log('Service Worker registration failed:', error);
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then(registration => {
+          console.log('Service Worker registered:', registration);
+        }).catch(error => {
+          console.log('Service Worker registration failed:', error);
+        });
       });
     }
+
+    // Pre-cache Quran data for offline search
+    async function preCacheQuranData() {
+      try {
+        const cache = await caches.open('quran-data-v1');
+        const response = await fetch('/api/search?q=الله'); // Initial search to cache some data
+        if (response.ok) {
+          await cache.put('/api/search?q=الله', response.clone());
+        }
+      } catch (e) {
+        console.log('Pre-caching failed:', e);
+      }
+    }
+    preCacheQuranData();
   </script>
 </body>
 </html>`);

@@ -63,7 +63,12 @@ function normalize(text) {
 
 function normalizeFlexible(text) {
   if (!text) return "";
-  return normalize(text).replace(/ا/g, "").replace(/ل/g, ""); // Even more flexible: ignore Alif AND Lam (common prefixes)
+  // Check specifically for "القرآن الكريم" or variations
+  const lowerText = text.replace(/[\u064B-\u0652\u0653-\u0670\u06D6-\u06ED\u06E1\u0640]/g, "");
+  if (lowerText.includes("القران الكريم") || lowerText.includes("القرآن الكريم")) {
+    return normalize(text).replace(/ا/g, "").replace(/ل/g, "");
+  }
+  return normalize(text).replace(/ا/g, "");
 }
 
 function normalizeForLetterCount(text) {

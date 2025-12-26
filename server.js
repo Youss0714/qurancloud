@@ -58,14 +58,12 @@ function normalize(text) {
     .replace(/\s+/g, " ")
     .trim();
   
-  // Create a secondary version that is even more flexible (ignores all Alifs)
-  // this will be used as a fallback if the primary search returns no results
   return normalized;
 }
 
 function normalizeFlexible(text) {
   if (!text) return "";
-  return normalize(text).replace(/ا/g, "");
+  return normalize(text).replace(/ا/g, "").replace(/ل/g, ""); // Even more flexible: ignore Alif AND Lam (common prefixes)
 }
 
 function normalizeForLetterCount(text) {

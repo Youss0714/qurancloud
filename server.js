@@ -90,6 +90,23 @@ function countLetters(text) {
   return letterCounts;
 }
 
+function countUniqueLetters(text) {
+  const norm = normalize(text).replace(/\s+/g, "");
+  const uniqueLetters = new Set();
+  
+  for (const char of norm) {
+    // الأبجدية العربية
+    const arabicLetters = ['ا', 'ب', 'ج', 'د', 'ه', 'و', 'ز', 'ح', 'ط', 'ي', 
+                           'ك', 'ل', 'م', 'ن', 'ص', 'ع', 'ف', 'ض', 'ق', 'ر', 
+                           'س', 'ت', 'ث', 'خ', 'ذ', 'ظ', 'غ', 'ش'];
+    if (arabicLetters.includes(char)) {
+      uniqueLetters.add(char);
+    }
+  }
+  
+  return uniqueLetters.size;
+}
+
 function calculateModulo98(N, O) {
   const P = N * O;
   const Q = P / 98;
@@ -247,6 +264,7 @@ const server = http.createServer((req, res) => {
     const modulo66Result = calculateModulo66(wordValue, totalOccurrences);
     const modulo92Result = calculateModulo92(wordValue, totalOccurrences);
     const letterCounts = countLetters(query);
+    const uniqueLetterCount = countUniqueLetters(query);
 
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ 
@@ -258,7 +276,8 @@ const server = http.createServer((req, res) => {
       modulo98Result,
       modulo66Result,
       modulo92Result,
-      letterCounts
+      letterCounts,
+      uniqueLetterCount
     }));
     return;
   }
@@ -771,12 +790,23 @@ const server = http.createServer((req, res) => {
 
         html += "</tbody></table></div>";
         
-        // Add total letter count at the bottom
+        // Add letter count statistics at the bottom
         if (data.letterCounts) {
           const totalLetters = Object.values(data.letterCounts).reduce((sum, count) => sum + count, 0);
-          html += "<div style='margin-top: 2rem; padding: 1.5rem; background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); border-radius: 8px; text-align: center; color: white;'>";
-          html += "<div style='font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.5rem;'>عدد الحروف في البحث</div>";
+          html += "<div style='margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;'>";
+          
+          // Total letters box
+          html += "<div style='flex: 1; min-width: 200px; padding: 1.5rem; background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); border-radius: 8px; text-align: center; color: white;'>";
+          html += "<div style='font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.5rem;'>عدد الحروف الكلي</div>";
           html += "<div style='font-size: 2.5rem; font-weight: bold;'>" + totalLetters + "</div>";
+          html += "</div>";
+          
+          // Unique letters box
+          html += "<div style='flex: 1; min-width: 200px; padding: 1.5rem; background: linear-gradient(135deg, #e67e22 0%, #d35400 100%); border-radius: 8px; text-align: center; color: white;'>";
+          html += "<div style='font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.5rem;'>عدد الحروف المختلفة</div>";
+          html += "<div style='font-size: 2.5rem; font-weight: bold;'>" + data.uniqueLetterCount + "</div>";
+          html += "</div>";
+          
           html += "</div>";
         }
         

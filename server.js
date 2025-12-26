@@ -262,13 +262,12 @@ const server = http.createServer((req, res) => {
       return;
     }
 
+    const isCommonName = query === "الله" || query === "اللَّه" || query === "لله" || query === "للَّه";
     const searchNormalized = normalize(query);
     const searchFlexible = normalizeFlexible(query);
     const wordValue = calculateGematria(query);
     let results = [];
     let totalOccurrences = 0;
-
-    const isCommonName = query === "الله" || query === "اللَّه" || query === "لله" || query === "للَّه";
 
     quranCache.forEach(chapter => {
       chapter.verses.forEach(verse => {
@@ -281,8 +280,7 @@ const server = http.createServer((req, res) => {
         } 
         
         // Flexible match (ignoring Alifs)
-        // If query is "الله", only use the flexible match if it wasn't already found exactly
-        // to avoid double counting or matching unrelated words
+        // Restricted to specific cases or when no exact match found
         if (countInVerse === 0 && !isCommonName && searchFlexible && normalizeFlexible(verse.text).includes(searchFlexible)) {
           const matches = normalizeFlexible(verse.text).split(searchFlexible).length - 1;
           countInVerse += matches;

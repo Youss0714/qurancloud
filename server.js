@@ -152,6 +152,36 @@ const server = http.createServer((req, res) => {
     serveStaticFile(filePath, res);
     return;
   }
+  
+  // Serve manifest.json
+  if (pathname === '/manifest.json') {
+    const filePath = path.join(__dirname, 'public', 'manifest.json');
+    fs.readFile(filePath, (err, data) => {
+      if (err) {
+        res.writeHead(404);
+        res.end('Not found');
+        return;
+      }
+      res.writeHead(200, { 'Content-Type': 'application/manifest+json', 'Cache-Control': 'public, max-age=86400' });
+      res.end(data);
+    });
+    return;
+  }
+  
+  // Serve service worker
+  if (pathname === '/sw.js') {
+    const filePath = path.join(__dirname, 'public', 'sw.js');
+    fs.readFile(filePath, (err, data) => {
+      if (err) {
+        res.writeHead(404);
+        res.end('Not found');
+        return;
+      }
+      res.writeHead(200, { 'Content-Type': 'application/javascript', 'Cache-Control': 'public, max-age=3600' });
+      res.end(data);
+    });
+    return;
+  }
 
   // Handle Search API
   if (pathname === '/api/search') {
@@ -215,8 +245,14 @@ const server = http.createServer((req, res) => {
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#2ecc71">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="green">
+  <meta name="apple-mobile-web-app-title" content="القرآن الكريم">
   <title>القرآن الكريم</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%232ecc71' width='192' height='192'/><text x='96' y='140' font-size='100' font-weight='bold' fill='white' text-anchor='middle' font-family='Arial'>📖</text></svg>">
   <link rel="stylesheet" href="/css/all-local.min.css">
   <style>
     :root {
@@ -727,6 +763,15 @@ const server = http.createServer((req, res) => {
         performSearch();
       }
     });
+    
+    // Register Service Worker for offline support
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').then(registration => {
+        console.log('Service Worker registered:', registration);
+      }).catch(error => {
+        console.log('Service Worker registration failed:', error);
+      });
+    }
   </script>
 </body>
 </html>

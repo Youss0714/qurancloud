@@ -274,10 +274,9 @@ const server = http.createServer((req, res) => {
           const matches = verse.normText.split(searchNormalized).length - 1;
           countInVerse += matches;
         } 
-        // Fallback to flexible match (ignoring Alifs) if no exact match found in this verse
-        // AND the user's query is not just a single short word to avoid too many false positives
-        else if (query.length > 3 && searchFlexible && normalizeFlexible(verse.text).includes(searchFlexible)) {
-          // This allows finding "القرآن" even if spelled with different Alifs
+        
+        // Always try flexible match (ignoring Alifs) as well, or as fallback
+        if (countInVerse === 0 && searchFlexible && normalizeFlexible(verse.text).includes(searchFlexible)) {
           const matches = normalizeFlexible(verse.text).split(searchFlexible).length - 1;
           countInVerse += matches;
         }

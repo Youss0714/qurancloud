@@ -29,9 +29,10 @@ This project serves Quran data in JSON format as a REST API, providing access to
 - Native HTTP module (no external dependencies)
 
 ## Recent Changes
-- December 26, 2025: Added Alif Khanjariyya (ٰ - dagger alif) as distinct letter in all letter counts
-- December 26, 2025: Created normalizeForLetterCount() function to preserve Alif Khanjariyya in calculations
-- December 26, 2025: Added display of UNIQUE letter count (sans doublons) alongside total letter count
+- December 26, 2025: Added Alif Khanjariyya (ٰ) to letterValues with value 1 for gematria calculations
+- December 26, 2025: Updated calculateGematria() to use normalizeForLetterCount() to include Alif Khanjariyya
+- December 26, 2025: Added Alif Khanjariyya as distinct letter in all letter counts
+- December 26, 2025: Created normalizeForLetterCount() function to preserve Alif Khanjariyya
 - December 26, 2025: Made app installable as PWA on Android/iOS with manifest.json and service worker
 
 ## Offline Functionality
@@ -44,6 +45,7 @@ This project serves Quran data in JSON format as a REST API, providing access to
 
 ## Features
 - **Gematria Calculation**: Calculates numeric values for Arabic words based on letter values
+  - **Alif Khanjariyya (ٰ) included**: Counted with value 1 in all numerical calculations
 - **Letter Count Analysis**: 
   - Total letter count in search term
   - Unique letter count (without duplicates / sans doublons)

@@ -37,7 +37,8 @@ const letterValues = {
   'ي': 10, 'ك': 20, 'ل': 30, 'م': 40, 'ن': 50, 'ص': 60, 'ع': 70, 'ف': 80, 'ض': 90,
   'ق': 100, 'ر': 200, 'س': 300, 'ت': 400, 'ث': 500, 'خ': 600, 'ذ': 700, 'ظ': 800, 'غ': 900,
   'ش': 1000,
-  'أ': 1, 'إ': 1, 'آ': 1, 'ٱ': 1, 'ة': 5, 'ى': 10, 'ئ': 10, 'ؤ': 6
+  'أ': 1, 'إ': 1, 'آ': 1, 'ٱ': 1, 'ة': 5, 'ى': 10, 'ئ': 10, 'ؤ': 6,
+  'ٰ': 1  // Alif Khanjariyya (dagger alif) - value 1
 };
 
 // Cache normalized data at server startup
@@ -77,7 +78,7 @@ function normalizeForLetterCount(text) {
 }
 
 function calculateGematria(text) {
-  const norm = normalize(text).replace(/\s+/g, "");
+  const norm = normalizeForLetterCount(text).replace(/\s+/g, "");
   let total = 0;
   for (const char of norm) {
     total += letterValues[char] || 0;

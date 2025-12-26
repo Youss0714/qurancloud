@@ -1,9 +1,34 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const url = require('url');
 
 const PORT = 5000;
 const HOST = '0.0.0.0';
+
+// Serve static files helper
+function serveStaticFile(filePath, res) {
+  const ext = path.extname(filePath);
+  const mimeTypes = {
+    '.css': 'text/css',
+    '.js': 'application/javascript',
+    '.woff2': 'font/woff2',
+    '.woff': 'font/woff',
+    '.ttf': 'font/ttf'
+  };
+  
+  const contentType = mimeTypes[ext] || 'application/octet-stream';
+  
+  fs.readFile(filePath, (err, data) => {
+    if (err) {
+      res.writeHead(404);
+      res.end('Not found');
+      return;
+    }
+    res.writeHead(200, { 'Content-Type': contentType, 'Cache-Control': 'public, max-age=31536000' });
+    res.end(data);
+  });
+}
 
 const BISMILLAH = "بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ";
 
@@ -108,16 +133,28 @@ const server = http.createServer((req, res) => {
   }
 
   const urlParts = req.url.split('?');
-  const url = urlParts[0];
+  const pathname = urlParts[0];
   
-  if (url === '/favicon.ico') {
+  if (pathname === '/favicon.ico') {
     res.writeHead(204);
     res.end();
     return;
   }
+  
+  // Serve static assets
+  if (pathname.startsWith('/css/')) {
+    const filePath = path.join(__dirname, 'public', pathname);
+    serveStaticFile(filePath, res);
+    return;
+  }
+  if (pathname.startsWith('/fonts/')) {
+    const filePath = path.join(__dirname, 'public', pathname);
+    serveStaticFile(filePath, res);
+    return;
+  }
 
   // Handle Search API
-  if (url === '/api/search') {
+  if (pathname === '/api/search') {
     const params = new URLSearchParams(urlParts[1] || '');
     const query = params.get('q');
     
@@ -172,7 +209,7 @@ const server = http.createServer((req, res) => {
     return;
   }
   
-  if (url === '/') {
+  if (pathname === '/') {
     res.writeHead(200, { 'Content-Type': 'text/html' });
     res.end(`<!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -180,7 +217,7 @@ const server = http.createServer((req, res) => {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>القرآن الكريم</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/all-local.min.css">
   <style>
     :root {
       --primary-color: #2ecc71;
@@ -478,7 +515,10 @@ const server = http.createServer((req, res) => {
       background: var(--primary-color);
       color: white;
     }
-    @import url('https://fonts.googleapis.com/css2?family=Amiri&display=swap');
+    @font-face {
+      font-family: 'Amiri';
+      src: url('/fonts/amiri.woff2') format('woff2');
+    }
   </style>
 </head>
 <body>

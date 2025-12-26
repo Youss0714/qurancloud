@@ -29,11 +29,18 @@ This project serves Quran data in JSON format as a REST API, providing access to
 - Native HTTP module (no external dependencies)
 
 ## Recent Changes
+- December 26, 2025: Made app fully offline-capable by serving Font Awesome and Amiri fonts locally
 - December 26, 2025: Enhanced table styling with proper borders and clear column/row separation
-- December 26, 2025: Added modulo 92 calculation function (T/92)
-- December 26, 2025: Added modulo 66 calculation function (T/66)
-- December 26, 2025: Added modulo 98 calculation function (T/98) to display remainder of (N*O) divided by 98
+- December 26, 2025: Added modulo 92, 66, and 98 calculation functions
 - December 25, 2025: Initial setup on Replit environment
+
+## Offline Functionality
+✅ **App now works completely offline:**
+- All resources (CSS, fonts) are served locally
+- Font Awesome icons: `/css/all-local.min.css` + `/fonts/fa-*.woff2`
+- Amiri Arabic font: `/fonts/amiri.woff2`
+- Quranic data: `quran.json` (cached at startup)
+- No external CDN dependencies required
 
 ## Features
 - **Gematria Calculation**: Calculates numeric values for Arabic words based on letter values

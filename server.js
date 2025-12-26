@@ -68,6 +68,28 @@ function calculateGematria(text) {
   return total;
 }
 
+function countLetters(text) {
+  const norm = normalize(text).replace(/\s+/g, "");
+  const letterCounts = {};
+  
+  // الأبجدية العربية
+  const arabicLetters = ['ا', 'ب', 'ج', 'د', 'ه', 'و', 'ز', 'ح', 'ط', 'ي', 
+                         'ك', 'ل', 'م', 'ن', 'ص', 'ع', 'ف', 'ض', 'ق', 'ر', 
+                         'س', 'ت', 'ث', 'خ', 'ذ', 'ظ', 'غ', 'ش'];
+  
+  arabicLetters.forEach(letter => {
+    letterCounts[letter] = 0;
+  });
+  
+  for (const char of norm) {
+    if (letterCounts.hasOwnProperty(char)) {
+      letterCounts[char]++;
+    }
+  }
+  
+  return letterCounts;
+}
+
 function calculateModulo98(N, O) {
   const P = N * O;
   const Q = P / 98;
@@ -224,6 +246,7 @@ const server = http.createServer((req, res) => {
     const modulo98Result = calculateModulo98(wordValue, totalOccurrences);
     const modulo66Result = calculateModulo66(wordValue, totalOccurrences);
     const modulo92Result = calculateModulo92(wordValue, totalOccurrences);
+    const letterCounts = countLetters(query);
 
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ 
@@ -234,7 +257,8 @@ const server = http.createServer((req, res) => {
       totalCalculation,
       modulo98Result,
       modulo66Result,
-      modulo92Result
+      modulo92Result,
+      letterCounts
     }));
     return;
   }
@@ -746,6 +770,35 @@ const server = http.createServer((req, res) => {
         });
 
         html += "</tbody></table></div>";
+        
+        // Add letter count table at the bottom
+        if (data.letterCounts) {
+          html += "<div style='margin-top: 2rem; padding: 1rem; background-color: #ecf0f1; border-radius: 8px;'>";
+          html += "<h3 style='margin-top: 0; text-align: center; color: #2c3e50;'>تكوين الحروف في البحث</h3>";
+          html += "<table style='width: 100%; border-collapse: collapse; direction: rtl;'>";
+          html += "<thead>";
+          html += "<tr style='background-color: #34495e; color: white;'>";
+          html += "<th style='padding: 0.5rem; border: 1px solid #95a5a6; text-align: center;'>الحرف</th>";
+          html += "<th style='padding: 0.5rem; border: 1px solid #95a5a6; text-align: center;'>العدد</th>";
+          html += "</tr>";
+          html += "</thead>";
+          html += "<tbody>";
+          
+          const letters = Object.keys(data.letterCounts).sort();
+          letters.forEach(letter => {
+            const count = data.letterCounts[letter];
+            if (count > 0) {
+              html += "<tr>";
+              html += "<td style='padding: 0.5rem; border: 1px solid #95a5a6; text-align: center; font-weight: bold; font-size: 1.1em;'>" + letter + "</td>";
+              html += "<td style='padding: 0.5rem; border: 1px solid #95a5a6; text-align: center;'>" + count + "</td>";
+              html += "</tr>";
+            }
+          });
+          html += "</tbody>";
+          html += "</table>";
+          html += "</div>";
+        }
+        
         if (data.totalResults > 100) {
           html += "<p style='margin-top: 1rem; color: #7f8c8d;'>عرض أول 100 نتيجة فقط...</p>";
         }

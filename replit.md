@@ -29,10 +29,10 @@ This project serves Quran data in JSON format as a REST API, providing access to
 - Native HTTP module (no external dependencies)
 
 ## Recent Changes
+- December 26, 2025: Added letter count display at bottom of results showing Arabic alphabet composition of search query
+- December 26, 2025: Made app installable as PWA on Android/iOS with manifest.json and service worker
 - December 26, 2025: Made app fully offline-capable by serving Font Awesome and Amiri fonts locally
 - December 26, 2025: Enhanced table styling with proper borders and clear column/row separation
-- December 26, 2025: Added modulo 92, 66, and 98 calculation functions
-- December 25, 2025: Initial setup on Replit environment
 
 ## Offline Functionality
 ✅ **App now works completely offline:**
@@ -44,7 +44,10 @@ This project serves Quran data in JSON format as a REST API, providing access to
 
 ## Features
 - **Gematria Calculation**: Calculates numeric values for Arabic words based on letter values
+- **Letter Count Analysis**: Shows the composition of search term by Arabic letters at bottom of results table
 - **Search Functionality**: Full-text search across all Quranic verses with normalization
+- **Modulo Operations**: T/98, T/66, T/92 calculations for numerical analysis
+- **PWA Installation**: Install as app on Android, iOS, Windows, and macOS
 - **Modulo 98 Calculation (T/98)**: Computes (wordValue * occurrences) mod 98
   - Formula: D = P - (floor(P/98) * 98), where P = N * O
 - **Modulo 66 Calculation (T/66)**: Computes (wordValue * occurrences) mod 66

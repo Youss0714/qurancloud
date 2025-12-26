@@ -532,7 +532,7 @@ const server = http.createServer((req, res) => {
       width: 100%;
       background: white;
       border-collapse: collapse;
-      direction: rtl;
+      direction: ltr;
       border: 2px solid #2c3e50;
     }
     .results-container {
@@ -588,24 +588,24 @@ const server = http.createServer((req, res) => {
     }
     .results-table th {
       padding: 18px 15px;
-      text-align: right;
+      text-align: left;
       font-size: 0.85rem;
       font-weight: 700;
-      border-right: 2px solid #2c3e50;
+      border-left: 2px solid #2c3e50;
       color: white;
       letter-spacing: 0.5px;
     }
-    .results-table th:last-child {
-      border-right: none;
+    .results-table th:first-child {
+      border-left: none;
     }
     .results-table td {
       padding: 18px 15px;
       border-bottom: 1px solid #ddd;
-      border-right: 2px solid #ddd;
-      text-align: right;
+      border-left: 2px solid #ddd;
+      text-align: left;
     }
-    .results-table td:last-child {
-      border-right: none;
+    .results-table td:first-child {
+      border-left: none;
     }
     .results-table tbody tr:last-child td {
       border-bottom: 2px solid #2c3e50;
@@ -845,7 +845,7 @@ const server = http.createServer((req, res) => {
         }
 
         html += \`
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-direction: row-reverse;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
             <h2 style="margin: 0;">Résultats de la recherche</h2>
           </div>
           <div class='results-container'>

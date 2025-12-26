@@ -1,11 +1,12 @@
-const CACHE_NAME = 'quran-v2';
+const CACHE_NAME = 'quran-v3';
 const urlsToCache = [
   '/',
   '/css/all-local.min.css',
   '/fonts/fa-solid-900.woff2',
   '/fonts/fa-regular-400.woff2',
   '/fonts/fa-brands-400.woff2',
-  '/fonts/amiri.woff2'
+  '/fonts/amiri.woff2',
+  '/manifest.json'
 ];
 
 self.addEventListener('install', event => {

@@ -59,6 +59,23 @@ function normalize(text) {
     .trim();
 }
 
+function normalizeForLetterCount(text) {
+  // Normalization for letter counting that preserves Alif Khanjariyya (ٰ)
+  if (!text) return "";
+  return text
+    .normalize("NFD")
+    .replace(/[\u064B-\u066F\u06D6-\u06ED\u06E1]/g, "") // Remove diacritics EXCEPT \u0670 (alif khanjariyya)
+    .replace(/[\u0671]/g, "ا") // Alif Wasla ٱ -> ا
+    .replace(/[أإآ]/g, "ا") // Normalisation des Alifs
+    .replace(/ؤ/g, "و") // Normalisation Waw
+    .replace(/[ئى]/g, "ي") // Normalisation Ya et Ya Hamza
+    .replace(/ة/g, "ه") // Normalisation Ta Marbuta
+    .replace(/ء/g, "") // Suppression Hamza isolée
+    .replace(/\u0640/g, "") // Suppression Tatweel
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function calculateGematria(text) {
   const norm = normalize(text).replace(/\s+/g, "");
   let total = 0;
@@ -69,13 +86,13 @@ function calculateGematria(text) {
 }
 
 function countLetters(text) {
-  const norm = normalize(text).replace(/\s+/g, "");
+  const norm = normalizeForLetterCount(text).replace(/\s+/g, "");
   const letterCounts = {};
   
-  // الأبجدية العربية
+  // الأبجدية العربية + Alif Khanjariyya (ٰ)
   const arabicLetters = ['ا', 'ب', 'ج', 'د', 'ه', 'و', 'ز', 'ح', 'ط', 'ي', 
                          'ك', 'ل', 'م', 'ن', 'ص', 'ع', 'ف', 'ض', 'ق', 'ر', 
-                         'س', 'ت', 'ث', 'خ', 'ذ', 'ظ', 'غ', 'ش'];
+                         'س', 'ت', 'ث', 'خ', 'ذ', 'ظ', 'غ', 'ش', 'ٰ'];
   
   arabicLetters.forEach(letter => {
     letterCounts[letter] = 0;
@@ -91,14 +108,14 @@ function countLetters(text) {
 }
 
 function countUniqueLetters(text) {
-  const norm = normalize(text).replace(/\s+/g, "");
+  const norm = normalizeForLetterCount(text).replace(/\s+/g, "");
   const uniqueLetters = new Set();
   
   for (const char of norm) {
-    // الأبجدية العربية
+    // الأبجدية العربية + Alif Khanjariyya (ٰ)
     const arabicLetters = ['ا', 'ب', 'ج', 'د', 'ه', 'و', 'ز', 'ح', 'ط', 'ي', 
                            'ك', 'ل', 'م', 'ن', 'ص', 'ع', 'ف', 'ض', 'ق', 'ر', 
-                           'س', 'ت', 'ث', 'خ', 'ذ', 'ظ', 'غ', 'ش'];
+                           'س', 'ت', 'ث', 'خ', 'ذ', 'ظ', 'غ', 'ش', 'ٰ'];
     if (arabicLetters.includes(char)) {
       uniqueLetters.add(char);
     }

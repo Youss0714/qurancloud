@@ -29,10 +29,10 @@ This project serves Quran data in JSON format as a REST API, providing access to
 - Native HTTP module (no external dependencies)
 
 ## Recent Changes
+- December 26, 2025: Added Alif Khanjariyya (ٰ - dagger alif) as distinct letter in all letter counts
+- December 26, 2025: Created normalizeForLetterCount() function to preserve Alif Khanjariyya in calculations
 - December 26, 2025: Added display of UNIQUE letter count (sans doublons) alongside total letter count
-- December 26, 2025: Updated letter count to display TOTAL number of letters in search query
 - December 26, 2025: Made app installable as PWA on Android/iOS with manifest.json and service worker
-- December 26, 2025: Made app fully offline-capable by serving Font Awesome and Amiri fonts locally
 
 ## Offline Functionality
 ✅ **App now works completely offline:**
@@ -47,6 +47,7 @@ This project serves Quran data in JSON format as a REST API, providing access to
 - **Letter Count Analysis**: 
   - Total letter count in search term
   - Unique letter count (without duplicates / sans doublons)
+  - **Alif Khanjariyya (ٰ) treatment**: Counted as distinct letter (not suppressed as diacritical mark)
 - **Search Functionality**: Full-text search across all Quranic verses with normalization
 - **Modulo Operations**: T/98, T/66, T/92 calculations for numerical analysis
 - **PWA Installation**: Install as app on Android, iOS, Windows, and macOS

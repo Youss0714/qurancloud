@@ -535,6 +535,42 @@ const server = http.createServer((req, res) => {
       border-radius: 10px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.05);
       margin-top: 1rem;
+      margin-bottom: 2rem;
+    }
+    
+    @media (max-width: 768px) {
+      .results-container {
+        max-height: 400px;
+        margin-bottom: 3rem;
+      }
+      .results-table th, .results-table td {
+        padding: 12px 10px;
+        font-size: 0.75rem;
+      }
+      .arabic-text {
+        font-size: 1.2rem;
+        line-height: 1.8;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .results-container {
+        max-height: 300px;
+        margin-bottom: 4rem;
+      }
+      .results-table th, .results-table td {
+        padding: 10px 8px;
+        font-size: 0.65rem;
+      }
+      .arabic-text {
+        font-size: 1rem;
+        line-height: 1.6;
+      }
+      .stat-card {
+        min-width: 120px;
+        max-width: none;
+      }
+      h1 { font-size: 1.8rem; }
     }
     .table-header-fixed {
       position: sticky;

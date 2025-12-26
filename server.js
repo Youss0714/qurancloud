@@ -839,12 +839,30 @@ const server = http.createServer((req, res) => {
           html += "<div style='flex: 1; min-width: 150px; padding: 1.5rem; background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); border-radius: 8px; text-align: center; color: white;'>";
           html += "<div style='font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.5rem;'>Nombre total de lettres</div>";
           html += "<div style='font-size: 2.5rem; font-weight: bold;'>" + totalLetters + "</div>";
+          
+          // Display individual letters for total count
+          html += "<div style='margin-top: 1rem; font-size: 1.2rem; display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; direction: rtl;'>";
+          Object.entries(data.letterCounts).forEach(([letter, count]) => {
+            if (count > 0) {
+              html += "<span title='" + count + "' style='background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 4px;'>" + letter + "</span>";
+            }
+          });
+          html += "</div>";
           html += "</div>";
           
           // Unique letters box
           html += "<div style='flex: 1; min-width: 150px; padding: 1.5rem; background: linear-gradient(135deg, #e67e22 0%, #d35400 100%); border-radius: 8px; text-align: center; color: white;'>";
           html += "<div style='font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.5rem;'>Nombre de lettres différentes</div>";
           html += "<div style='font-size: 2.5rem; font-weight: bold;'>" + data.uniqueLetterCount + "</div>";
+          
+          // Display unique letters
+          html += "<div style='margin-top: 1rem; font-size: 1.2rem; display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; direction: rtl;'>";
+          Object.entries(data.letterCounts).forEach(([letter, count]) => {
+            if (count > 0) {
+              html += "<span style='background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 4px;'>" + letter + "</span>";
+            }
+          });
+          html += "</div>";
           html += "</div>";
           
           html += "</div>";

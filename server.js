@@ -262,14 +262,20 @@ const server = http.createServer((req, res) => {
     const wordValue = calculateGematria(query);
     let results = [];
     let totalOccurrences = 0;
+    
+    // Map to count occurrences per chapter
+    const chapterCounts = {};
 
     quranCache.forEach(chapter => {
+      let countInChapter = 0;
+      
       chapter.verses.forEach(verse => {
         let countInVerse = 0;
 
         if (searchNormalized && verse.normText.includes(searchNormalized)) {
           const matches = verse.normText.split(searchNormalized).length - 1;
           countInVerse += matches;
+          countInChapter += matches;
         }
 
         if (countInVerse > 0) {
@@ -282,6 +288,11 @@ const server = http.createServer((req, res) => {
           });
         }
       });
+      
+      // Store count for this chapter
+      if (countInChapter > 0) {
+        chapterCounts[chapter.id] = countInChapter;
+      }
     });
 
     const totalCalculation = wordValue * totalOccurrences;
@@ -302,7 +313,8 @@ const server = http.createServer((req, res) => {
       modulo66Result,
       modulo92Result,
       letterCounts,
-      uniqueLetterCount
+      uniqueLetterCount,
+      chapterCounts
     }));
     return;
   }
@@ -856,11 +868,13 @@ const server = http.createServer((req, res) => {
                   <th style='width: 100px;'>Sourate</th>
                   <th style='width: 50px;'>Verset</th>
                   <th>Texte</th>
+                  <th style='width: 80px;'>Occurrences</th>
                 </tr>
               </thead>
               <tbody>\`;
 
         data.results.forEach(res => {
+          const occurrences = data.chapterCounts[res.chapterId] || 0;
           html += "<tr>" +
               "<td style='font-weight: bold;'>" + res.chapterId + "</td>" +
               "<td>" + res.chapterName + "</td>" +
@@ -868,6 +882,7 @@ const server = http.createServer((req, res) => {
               "<td>" +
                 "<div class='arabic-text'>" + highlightText(res.text, queryInput) + "</div>" +
               "</td>" +
+              "<td style='text-align: center; font-weight: bold; color: var(--primary-color);'>" + occurrences + "</td>" +
             "</tr>";
         });
 

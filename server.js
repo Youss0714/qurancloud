@@ -141,7 +141,7 @@ const server = http.createServer((req, res) => {
   
   if (url === '/') {
     res.writeHead(200, { 'Content-Type': 'text/html' });
-    res.end(`<!DOCTYPE html>
+    const htmlContent = `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
@@ -647,9 +647,8 @@ const server = http.createServer((req, res) => {
     });
   </script>
 </body>
-</html>
-\`);
-    return;
+</html>`;
+    res.end(htmlContent);
   }
 });
 

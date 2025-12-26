@@ -1,4 +1,4 @@
-const CACHE_NAME = 'quran-v1';
+const CACHE_NAME = 'quran-v2';
 const urlsToCache = [
   '/',
   '/css/all-local.min.css',
@@ -11,9 +11,7 @@ const urlsToCache = [
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(urlsToCache).catch(() => {
-        console.log('Some resources could not be cached');
-      });
+      return cache.addAll(urlsToCache);
     })
   );
   self.skipWaiting();
@@ -39,22 +37,28 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  event.respondWith(
-    caches.match(event.request).then(response => {
-      if (response) {
-        return response;
-      }
-      return fetch(event.request).then(response => {
-        if (!response || response.status !== 200 || response.type === 'error') {
-          return response;
-        }
+  // Network-first strategy for index and search API to avoid stale data
+  if (event.request.url.includes('/api/search') || event.request.url.endsWith('/')) {
+    event.respondWith(
+      fetch(event.request).then(response => {
         const responseToCache = response.clone();
         caches.open(CACHE_NAME).then(cache => {
           cache.put(event.request, responseToCache);
         });
         return response;
-      }).catch(() => {
-        return caches.match(event.request);
+      }).catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  event.respondWith(
+    caches.match(event.request).then(response => {
+      return response || fetch(event.request).then(response => {
+        const responseToCache = response.clone();
+        caches.open(CACHE_NAME).then(cache => {
+          cache.put(event.request, responseToCache);
+        });
+        return response;
       });
     })
   );

@@ -29,6 +29,7 @@ This project serves Quran data in JSON format as a REST API, providing access to
 - Native HTTP module (no external dependencies)
 
 ## Recent Changes
+- December 26, 2025: Added modulo 92 calculation function (T/92)
 - December 26, 2025: Added modulo 66 calculation function (T/66)
 - December 26, 2025: Added modulo 98 calculation function (T/98) to display remainder of (N*O) divided by 98
 - December 25, 2025: Initial setup on Replit environment
@@ -40,6 +41,8 @@ This project serves Quran data in JSON format as a REST API, providing access to
   - Formula: D = P - (floor(P/98) * 98), where P = N * O
 - **Modulo 66 Calculation (T/66)**: Computes (wordValue * occurrences) mod 66
   - Formula: D = P - (floor(P/66) * 66), where P = N * O
+- **Modulo 92 Calculation (T/92)**: Computes (wordValue * occurrences) mod 92
+  - Formula: D = P - (floor(P/92) * 92), where P = N * O
 
 ## Statistics Displayed in Search Results
 - Number of verses (عدد الآيات)
@@ -47,3 +50,4 @@ This project serves Quran data in JSON format as a REST API, providing access to
 - Total calculation: wordValue × occurrences (الإجمالي الحسابي)
 - T/98: Modulo 98 result
 - T/66: Modulo 66 result
+- T/92: Modulo 92 result

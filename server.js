@@ -792,22 +792,22 @@ const server = http.createServer((req, res) => {
         loading.style.display = "none";
 
         if (data.results.length === 0) {
-          resultsArea.innerHTML = "<p>لم يتم العثور على نتائج.</p>";
+          resultsArea.innerHTML = "<p>Aucun résultat trouvé.</p>";
           return;
         }
 
         let html = \`
           <div class="stats-container">
             <div class="stat-card">
-              <div class="label">عدد الآيات</div>
+              <div class="label">Nombre de versets</div>
               <div class="value">\${data.totalOccurrences}</div>
             </div>
             <div class="stat-card">
-              <div class="label">القيمة العددية</div>
+              <div class="label">Valeur numérique</div>
               <div class="value">\${data.wordValue}</div>
             </div>
             <div class="stat-card total">
-              <div class="label">الإجمالي الحسابي</div>
+              <div class="label">Total du calcul</div>
               <div class="value">\${data.totalCalculation.toLocaleString()}</div>
             </div>
             <div class="stat-card">
@@ -831,13 +831,13 @@ const server = http.createServer((req, res) => {
           
           // Total letters box
           html += "<div style='flex: 1; min-width: 150px; padding: 1.5rem; background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); border-radius: 8px; text-align: center; color: white;'>";
-          html += "<div style='font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.5rem;'>عدد الحروف الكلي</div>";
+          html += "<div style='font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.5rem;'>Nombre total de lettres</div>";
           html += "<div style='font-size: 2.5rem; font-weight: bold;'>" + totalLetters + "</div>";
           html += "</div>";
           
           // Unique letters box
           html += "<div style='flex: 1; min-width: 150px; padding: 1.5rem; background: linear-gradient(135deg, #e67e22 0%, #d35400 100%); border-radius: 8px; text-align: center; color: white;'>";
-          html += "<div style='font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.5rem;'>عدد الحروف المختلفة</div>";
+          html += "<div style='font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.5rem;'>Nombre de lettres différentes</div>";
           html += "<div style='font-size: 2.5rem; font-weight: bold;'>" + data.uniqueLetterCount + "</div>";
           html += "</div>";
           
@@ -846,16 +846,16 @@ const server = http.createServer((req, res) => {
 
         html += \`
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-direction: row-reverse;">
-            <h2 style="margin: 0;">نتائج البحث</h2>
+            <h2 style="margin: 0;">Résultats de la recherche</h2>
           </div>
           <div class='results-container'>
             <table class='results-table'>
               <thead class='table-header-fixed'>
                 <tr>
-                  <th style='width: 50px;'>رقم</th>
-                  <th style='width: 100px;'>السورة</th>
-                  <th style='width: 50px;'>الآية</th>
-                  <th>النص</th>
+                  <th style='width: 50px;'>Numéro</th>
+                  <th style='width: 100px;'>Sourate</th>
+                  <th style='width: 50px;'>Verset</th>
+                  <th>Texte</th>
                 </tr>
               </thead>
               <tbody>\`;
@@ -874,14 +874,14 @@ const server = http.createServer((req, res) => {
         html += "</tbody></table></div>";
         
         if (data.totalResults > 100) {
-          html += "<p style='margin-top: 1rem; color: #7f8c8d;'>عرض أول 100 نتيجة فقط...</p>";
+          html += "<p style='margin-top: 1rem; color: #7f8c8d;'>Affichage des 100 premiers résultats uniquement...</p>";
         }
         resultsArea.innerHTML = html;
 
       } catch (err) {
         console.error(err);
         loading.style.display = "none";
-        resultsArea.innerHTML = "<p>حدث خطأ أثناء البحث.</p>";
+        resultsArea.innerHTML = "<p>Une erreur s'est produite lors de la recherche.</p>";
       }
     }
     

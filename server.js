@@ -268,6 +268,8 @@ const server = http.createServer((req, res) => {
     let results = [];
     let totalOccurrences = 0;
 
+    const isCommonName = query === "الله" || query === "اللَّه";
+
     quranCache.forEach(chapter => {
       chapter.verses.forEach(verse => {
         let countInVerse = 0;
@@ -278,8 +280,10 @@ const server = http.createServer((req, res) => {
           countInVerse += matches;
         } 
         
-        // Always try flexible match (ignoring Alifs) as well, or as fallback
-        if (countInVerse === 0 && searchFlexible && normalizeFlexible(verse.text).includes(searchFlexible)) {
+        // Flexible match (ignoring Alifs)
+        // If query is "الله", only use the flexible match if it wasn't already found exactly
+        // to avoid double counting or matching unrelated words
+        if (countInVerse === 0 && !isCommonName && searchFlexible && normalizeFlexible(verse.text).includes(searchFlexible)) {
           const matches = normalizeFlexible(verse.text).split(searchFlexible).length - 1;
           countInVerse += matches;
         }

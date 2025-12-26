@@ -624,8 +624,8 @@ const server = http.createServer((req, res) => {
     }
     .results-table td {
       padding: 18px 15px;
-      border-bottom: 1px solid #ddd;
-      border-left: 2px solid #ddd;
+      border-bottom: 1px solid var(--primary-color);
+      border-left: 2px solid var(--primary-color);
       text-align: left;
     }
     .results-table td:first-child {

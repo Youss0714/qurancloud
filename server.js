@@ -842,7 +842,7 @@ const server = http.createServer((req, res) => {
           
           // Display ALL individual letters including duplicates
           html += "<div style='margin-top: 1rem; font-size: 1.2rem; display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; direction: rtl;'>";
-          const queryNorm = normalize(queryInput).replace(/\s+/g, "");
+          const queryNorm = normalizeForLetterCount(queryInput).replace(/\s+/g, "");
           for (const char of queryNorm) {
             html += "<span style='background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 4px;'>" + char + "</span>";
           }

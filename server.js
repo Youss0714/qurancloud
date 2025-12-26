@@ -66,7 +66,7 @@ function normalizeForLetterCount(text) {
   if (!text) return "";
   return text
     .normalize("NFD")
-    .replace(/[\u064B-\u066F\u06D6-\u06ED\u06E1]/g, "") // Remove diacritics EXCEPT \u0670 (alif khanjariyya)
+    .replace(/[\u064B-\u0652\u0653-\u066F\u06D6-\u06ED\u06E1]/g, "") // Remove diacritics EXCEPT \u0670 (alif khanjariyya)
     .replace(/[\u0671]/g, "ا") // Alif Wasla ٱ -> ا
     .replace(/[أإآ]/g, "ا") // Normalisation des Alifs
     .replace(/ؤ/g, "و") // Normalisation Waw
@@ -763,26 +763,26 @@ const server = http.createServer((req, res) => {
       
       loading.style.display = 'block';
 
-      function normalize(text) {
-        if (!text) return "";
-        return text
-          .normalize("NFD")
-          .replace(/[\u064B-\u0652\u0653-\u0670\u06D6-\u06ED\u06E1\u0640]/g, "")
-          .replace(/[\u0671]/g, "ا")
-          .replace(/[أإآ]/g, "ا")
-          .replace(/ؤ/g, "و")
-          .replace(/[ئى]/g, "ي")
-          .replace(/ة/g, "ه")
-          .replace(/ء/g, "")
-          .replace(/\u0640/g, "")
-          .replace(/\s+/g, " ")
-          .trim();
-      }
+    function normalizeForLetterCount(text) {
+      if (!text) return "";
+      return text
+        .normalize("NFD")
+        .replace(/[\u064B-\u0652\u0653-\u066F\u06D6-\u06ED\u06E1]/g, "")
+        .replace(/[\u0671]/g, "ا")
+        .replace(/[أإآ]/g, "ا")
+        .replace(/ؤ/g, "و")
+        .replace(/[ئى]/g, "ي")
+        .replace(/ة/g, "ه")
+        .replace(/ء/g, "")
+        .replace(/\u0640/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
 
       function highlightText(text, term) {
         if (!term) return text;
-        const normText = normalize(text);
-        const normTerm = normalize(term);
+        const normText = normalizeForLetterCount(text);
+        const normTerm = normalizeForLetterCount(term);
         if (!normText.includes(normTerm)) return text;
         return "<span class='highlight'>" + text + "</span>";
       }

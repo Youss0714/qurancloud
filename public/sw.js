@@ -1,5 +1,5 @@
-const CACHE_NAME = 'quran-v4';
-const DATA_CACHE_NAME = 'quran-data-v1';
+const CACHE_NAME = 'quran-v5';
+const DATA_CACHE_NAME = 'quran-data-v2';
 const urlsToCache = [
   '/',
   '/css/all-local.min.css',

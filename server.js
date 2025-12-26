@@ -262,7 +262,9 @@ const server = http.createServer((req, res) => {
       return;
     }
 
-    const isCommonName = query === "الله" || query === "اللَّه" || query === "لله" || query === "للَّه";
+    // Special handling for Allah name variants
+    const allaVervariants = ['الله', 'اللَّه', 'لله', 'للَّه', 'للاه'];
+    const isCommonName = allaVervariants.some(v => normalize(v) === normalize(query));
     const searchNormalized = normalize(query);
     const searchFlexible = normalizeFlexible(query);
     const wordValue = calculateGematria(query);

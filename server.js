@@ -55,7 +55,6 @@ function normalize(text) {
     .replace(/[ئى]/g, "ي") // Normalisation Ya et Ya Hamza
     .replace(/ة/g, "ه") // Normalisation Ta Marbuta
     .replace(/ء/g, "") // Suppression Hamza isolée
-    .replace(/ا/g, "") // Suppression de tous les Alifs pour la recherche flexible
     .replace(/\s+/g, " ")
     .trim();
   

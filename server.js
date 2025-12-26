@@ -766,15 +766,15 @@ const server = http.createServer((req, res) => {
         if (!text) return "";
         return text
           .normalize("NFD")
-          .replace(/[\\\\u064B-\\\\u0652\\\\u0670\\\\u06E1\\\\u06D6-\\\\u06ED]/g, "")
-          .replace(/[\\\\u0671]/g, "ا")
+          .replace(/[\\u064B-\\u0652\\u0670\\u06E1\\u06D6-\\u06ED]/g, "")
+          .replace(/[\\u0671]/g, "ا")
           .replace(/[أإآ]/g, "ا")
           .replace(/ؤ/g, "و")
           .replace(/[ئى]/g, "ي")
           .replace(/ة/g, "ه")
           .replace(/ء/g, "")
-          .replace(/\\\\u0640/g, "")
-          .replace(/\\\\s+/g, " ")
+          .replace(/\\u0640/g, "")
+          .replace(/\\s+/g, " ")
           .trim();
       }
 
@@ -800,8 +800,12 @@ const server = http.createServer((req, res) => {
         let html = \`
           <div class="stats-container">
             <div class="stat-card">
-              <div class="label">Nombre de versets</div>
+              <div class="label">Total des occurrences</div>
               <div class="value">\${data.totalOccurrences}</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Nombre de versets</div>
+              <div class="value">\${data.totalResults}</div>
             </div>
             <div class="stat-card">
               <div class="label">Valeur numérique</div>
@@ -875,10 +879,6 @@ const server = http.createServer((req, res) => {
         });
 
         html += "</tbody></table></div>";
-        
-        if (data.totalResults > 100) {
-          html += "<p style='margin-top: 1rem; color: #7f8c8d;'>Affichage des 100 premiers résultats uniquement...</p>";
-        }
         resultsArea.innerHTML = html;
 
       } catch (err) {
@@ -904,8 +904,7 @@ const server = http.createServer((req, res) => {
     }
   </script>
 </body>
-</html>
-`);
+</html>`);
     return;
   }
 });

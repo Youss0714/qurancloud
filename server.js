@@ -15,21 +15,20 @@ const letterValues = {
   'أ': 1, 'إ': 1, 'آ': 1, 'ٱ': 1, 'ة': 5, 'ى': 10, 'ئ': 10, 'ؤ': 6
 };
 
-// Cache normalized data at server startup
 let quranCache = null;
 
 function normalize(text) {
   if (!text) return "";
   return text
     .normalize("NFD")
-    .replace(/[\u064B-\u0652\u0670\u06E1\u06D6-\u06ED]/g, "") // Suppression des diacritiques (Tashkeel)
-    .replace(/[\u0671]/g, "ا") // Alif Wasla ٱ -> ا
-    .replace(/[أإآ]/g, "ا") // Normalisation des Alifs
-    .replace(/ؤ/g, "و") // Normalisation Waw
-    .replace(/[ئى]/g, "ي") // Normalisation Ya et Ya Hamza
-    .replace(/ة/g, "ه") // Normalisation Ta Marbuta
-    .replace(/ء/g, "") // Suppression Hamza isolée
-    .replace(/\u0640/g, "") // Suppression Tatweel
+    .replace(/[\u064B-\u0652\u0670\u06E1\u06D6-\u06ED]/g, "")
+    .replace(/[\u0671]/g, "ا")
+    .replace(/[أإآ]/g, "ا")
+    .replace(/ؤ/g, "و")
+    .replace(/[ئى]/g, "ي")
+    .replace(/ة/g, "ه")
+    .replace(/ء/g, "")
+    .replace(/\u0640/g, "")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -44,7 +43,6 @@ function calculateGematria(text) {
 }
 
 try {
-  // Use the Arabic only file
   const data = JSON.parse(fs.readFileSync('./quran.json', 'utf8'));
   quranCache = data.map(chapter => {
     const updatedVerses = chapter.verses.map((verse, index) => {
@@ -63,7 +61,7 @@ try {
       verses: updatedVerses
     };
   });
-  console.log('Arabic Quran data pre-loaded, Bismillah added, and normalized');
+  console.log('Arabic Quran data pre-loaded');
 } catch (err) {
   console.error('Error pre-loading Quran data:', err);
 }
@@ -89,7 +87,6 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // Handle Search API
   if (url === '/api/search') {
     const params = new URLSearchParams(urlParts[1] || '');
     const query = params.get('q');
@@ -108,12 +105,10 @@ const server = http.createServer((req, res) => {
     quranCache.forEach(chapter => {
       chapter.verses.forEach(verse => {
         let countInVerse = 0;
-
         if (searchNormalized && verse.normText.includes(searchNormalized)) {
           const matches = verse.normText.split(searchNormalized).length - 1;
           countInVerse += matches;
         }
-
         if (countInVerse > 0) {
           totalOccurrences += countInVerse;
           results.push({
@@ -141,7 +136,7 @@ const server = http.createServer((req, res) => {
   
   if (url === '/') {
     res.writeHead(200, { 'Content-Type': 'text/html' });
-    const htmlContent = `<!DOCTYPE html>
+    const html = `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
@@ -154,6 +149,9 @@ const server = http.createServer((req, res) => {
       --secondary-color: #e67e22;
       --bg-color: #f8f9fa;
       --text-color: #2c3e50;
+      --col-verses: #3498db;
+      --col-value: #e67e22;
+      --col-total: #27ae60;
     }
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -162,496 +160,130 @@ const server = http.createServer((req, res) => {
       color: var(--text-color);
       overflow-x: hidden;
     }
-
-    /* Splash Screen Animation */
     #splash-screen {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      top: 0; left: 0; width: 100%; height: 100%;
       background: white;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
       z-index: 1000;
       transition: opacity 0.8s ease-out, visibility 0.8s;
     }
-    .splash-logo {
-      font-size: 4rem;
-      color: var(--primary-color);
-      margin-bottom: 20px;
-      animation: logo-entrance 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-      opacity: 0;
-    }
-    .splash-text {
-      font-size: 1.8rem;
-      font-weight: 600;
-      color: var(--text-color);
-      opacity: 0;
-      animation: fade-in 0.8s ease-out 0.6s forwards;
-    }
-    .splash-loader {
-      margin-top: 30px;
-      width: 40px;
-      height: 40px;
-      border: 3px solid #f3f3f3;
-      border-top: 3px solid var(--primary-color);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      opacity: 0;
-      animation: fade-in 0.5s ease-out 1s forwards, spin 1s linear infinite;
-    }
-
-    @keyframes logo-entrance {
-      from { transform: scale(0.5); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
-    }
-    @keyframes fade-in {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    .hide-splash {
-      opacity: 0 !important;
-      visibility: hidden !important;
-    }
-
-    /* Main Content Entrance */
-    .app-content {
-      opacity: 0;
-      transform: translateY(20px);
-      transition: all 0.8s ease-out;
-    }
-    .show-content {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    header {
-      background: white;
-      padding: 1rem 2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      flex-direction: row-reverse;
-    }
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-weight: bold;
-      font-size: 1.2rem;
-      flex-direction: row-reverse;
-    }
+    .splash-logo { font-size: 4rem; color: var(--primary-color); margin-bottom: 20px; }
+    .splash-text { font-size: 1.8rem; font-weight: 600; }
+    .splash-loader { margin-top: 30px; width: 40px; height: 40px; border: 3px solid #f3f3f3; border-top: 3px solid var(--primary-color); border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .hide-splash { opacity: 0 !important; visibility: hidden !important; }
+    .app-content { opacity: 0; transform: translateY(20px); transition: all 0.8s ease-out; }
+    .show-content { opacity: 1; transform: translateY(0); }
+    header { background: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); flex-direction: row-reverse; }
+    .logo { display: flex; align-items: center; gap: 10px; font-weight: bold; font-size: 1.2rem; flex-direction: row-reverse; }
     .logo i { color: var(--primary-color); }
-    
-    .container {
-      max-width: 900px;
-      margin: 2rem auto;
-      padding: 0 1rem;
-      text-align: center;
-    }
-    
-    .search-section {
-      margin-bottom: 2rem;
-    }
+    .container { max-width: 900px; margin: 2rem auto; padding: 0 1rem; text-align: center; }
+    .search-section { margin-bottom: 2rem; }
     h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
     .subtitle { color: #7f8c8d; margin-bottom: 2rem; }
-    
-    .search-box {
-      display: flex;
-      gap: 15px;
-      background: white;
-      padding: 8px;
-      border-radius: 50px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-      max-width: 850px;
-      margin: 0 auto;
-      position: relative;
-      align-items: center;
-      border: 1px solid #f0f0f0;
-      transition: all 0.3s ease;
-      flex-direction: row-reverse;
-    }
-    .search-box:focus-within {
-      box-shadow: 0 6px 25px rgba(46, 204, 113, 0.15);
-      border-color: var(--primary-color);
-    }
-    .search-box input {
-      flex: 1;
-      border: none;
-      padding: 15px 30px;
-      border-radius: 50px;
-      font-size: 1.1rem;
-      outline: none;
-      background: transparent;
-      text-align: right;
-    }
-    .clear-btn {
-      position: absolute;
-      left: 170px;
-      background: #f8f9fa;
-      border: none;
-      color: #95a5a6;
-      cursor: pointer;
-      font-size: 1rem;
-      display: none;
-      padding: 0;
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      line-height: 28px;
-      transition: all 0.2s;
-    }
-    .clear-btn:hover {
-      background: #edeff1;
-      color: #2c3e50;
-    }
-    .search-btn {
-      background: var(--primary-color);
-      color: white;
-      border: none;
-      padding: 0 35px;
-      height: 50px;
-      border-radius: 40px;
-      font-weight: 600;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: all 0.3s;
-      box-shadow: 0 4px 12px rgba(46, 204, 113, 0.2);
-    }
-    .search-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 15px rgba(46, 204, 113, 0.3);
-      opacity: 0.95;
-    }
-
-    /* Stats Table Styling */
-    .stats-table-wrapper {
-      margin-bottom: 2rem;
-      background: white;
-      border-radius: 15px;
-      overflow: hidden;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-      border: 1px solid #eee;
-    }
-    .stats-table {
-      width: 100%;
-      border-collapse: collapse;
-      direction: rtl;
-    }
-    .stats-table th {
-      background: #f8f9fa;
-      padding: 15px;
-      text-align: center;
-      color: #7f8c8d;
-      font-size: 0.9rem;
-      border-bottom: 1px solid #eee;
-    }
-    .stats-table td {
-      padding: 15px;
-      text-align: center;
-      font-size: 1.2rem;
-      font-weight: bold;
-      color: var(--primary-color);
-    }
-    .stats-table td.total-cell {
-      background: #e8f8f0;
-      color: var(--primary-color);
-      font-size: 1.4rem;
-    }
-
-    .results-table {
-      width: 100%;
-      background: white;
-      border-collapse: collapse;
-      border-radius: 10px;
-      direction: rtl;
-    }
-    .results-container {
-      max-height: 600px;
-      overflow-y: auto;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-      margin-top: 1rem;
-    }
-    .table-header-fixed {
-      position: sticky;
-      top: 0;
-      background: #f1f3f5;
-      z-index: 10;
-    }
-    .results-table th {
-      padding: 15px;
-      text-align: right;
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      color: #7f8c8d;
-    }
-    .results-table td {
-      padding: 20px 15px;
-      border-bottom: 1px solid #eee;
-      text-align: right;
-    }
-    .arabic-text {
-      font-family: 'Amiri', serif;
-      font-size: 1.8rem;
-      direction: rtl;
-      line-height: 2.5;
-    }
-    .highlight {
-      background-color: #ffeb3b;
-      color: #000;
-      padding: 0 2px;
-      border-radius: 2px;
-      font-weight: bold;
-    }
-    .loading { margin: 2rem; color: var(--primary-color); display: none; }
-    
-    .scroll-nav {
-      position: fixed;
-      right: 20px;
-      bottom: 80px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      z-index: 100;
-    }
-    .scroll-btn {
-      background: white;
-      color: var(--primary-color);
-      border: none;
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-      transition: all 0.2s;
-    }
-    .scroll-btn:hover {
-      background: var(--primary-color);
-      color: white;
-    }
+    .search-box { display: flex; gap: 15px; background: white; padding: 8px; border-radius: 50px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); max-width: 850px; margin: 0 auto; position: relative; align-items: center; border: 1px solid #f0f0f0; transition: all 0.3s ease; flex-direction: row-reverse; }
+    .search-box:focus-within { box-shadow: 0 6px 25px rgba(46, 204, 113, 0.15); border-color: var(--primary-color); }
+    .search-box input { flex: 1; border: none; padding: 15px 30px; border-radius: 50px; font-size: 1.1rem; outline: none; background: transparent; text-align: right; }
+    .clear-btn { position: absolute; left: 170px; background: #f8f9fa; border: none; color: #95a5a6; cursor: pointer; font-size: 1rem; display: none; padding: 0; width: 28px; height: 28px; border-radius: 50%; line-height: 28px; }
+    .search-btn { background: var(--primary-color); color: white; border: none; padding: 0 35px; height: 50px; border-radius: 40px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+    .stats-table-wrapper { margin-bottom: 2rem; background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 1px solid #eee; }
+    .stats-table { width: 100%; border-collapse: collapse; direction: rtl; }
+    .stats-table th { background: #fdfdfd; padding: 18px 15px; text-align: center; color: #555; font-size: 0.95rem; font-weight: 600; border-bottom: 2px solid #f0f0f0; }
+    .stats-table td { padding: 20px 15px; text-align: center; font-size: 1.5rem; font-weight: 700; }
+    .stats-table td:nth-child(1) { color: var(--col-verses); background-color: rgba(52, 152, 219, 0.05); }
+    .stats-table td:nth-child(2) { color: var(--col-value); background-color: rgba(230, 126, 34, 0.05); }
+    .stats-table td:nth-child(3) { color: var(--col-total); background-color: rgba(39, 174, 96, 0.05); }
+    .results-container { max-height: 600px; overflow-y: auto; background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-top: 1rem; }
+    .results-table { width: 100%; border-collapse: collapse; direction: rtl; }
+    .table-header-fixed { position: sticky; top: 0; background: #f1f3f5; z-index: 10; }
+    .results-table th { padding: 15px; text-align: right; font-size: 0.8rem; color: #7f8c8d; }
+    .results-table td { padding: 20px 15px; border-bottom: 1px solid #eee; text-align: right; }
+    .arabic-text { font-family: 'Amiri', serif; font-size: 1.8rem; direction: rtl; line-height: 2.5; }
+    .highlight { background-color: #ffeb3b; padding: 0 2px; border-radius: 2px; font-weight: bold; }
+    .scroll-nav { position: fixed; right: 20px; bottom: 80px; display: flex; flex-direction: column; gap: 12px; z-index: 100; }
+    .scroll-btn { background: white; color: var(--primary-color); border: none; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
     @import url('https://fonts.googleapis.com/css2?family=Amiri&display=swap');
   </style>
 </head>
 <body>
-  <!-- Splash Screen -->
   <div id="splash-screen">
     <div class="splash-logo"><i class="fas fa-book-open"></i></div>
     <div class="splash-text">القرآن الكريم</div>
     <div class="splash-loader"></div>
   </div>
-
   <div class="app-content">
     <header>
       <div class="logo"><i class="fas fa-book-open"></i> القرآن الكريم</div>
       <div class="nav-right"><i class="fas fa-search"></i> بحث</div>
     </header>
-
     <div class="scroll-nav">
-      <button class="scroll-btn" onclick="scrollToTop()" title="Retour en haut">
-        <i class="fas fa-arrow-up"></i>
-      </button>
-      <button class="scroll-btn" onclick="scrollToBottom()" title="Aller en bas">
-        <i class="fas fa-arrow-down"></i>
-      </button>
+      <button class="scroll-btn" onclick="scrollToTop()"><i class="fas fa-arrow-up"></i></button>
+      <button class="scroll-btn" onclick="scrollToBottom()"><i class="fas fa-arrow-down"></i></button>
     </div>
-
     <div class="container">
       <div class="search-section">
         <h1>القرآن الكريم</h1>
         <div class="subtitle">ابحث في 6236 آية</div>
-        
         <div class="search-box">
-          <input type="text" id="searchInput" placeholder="ابحث عن كلمة أو جملة..." value="" oninput="toggleClearBtn()">
-          <button id="clearBtn" class="clear-btn" onclick="clearSearch()" title="Effacer"><i class="fas fa-times"></i></button>
+          <input type="text" id="searchInput" placeholder="ابحث عن كلمة أو جملة..." oninput="toggleClearBtn()">
+          <button id="clearBtn" class="clear-btn" onclick="clearSearch()"><i class="fas fa-times"></i></button>
           <button class="search-btn" onclick="performSearch()">بحث</button>
         </div>
       </div>
-
-      <div id="loading" class="loading"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</div>
-      
-      <div id="resultsArea">
-        <div style="margin-top: 5rem;">
-          <div style="background: #e8f8f0; width: 80px; height: 80px; border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto; margin-bottom: 1rem;">
-             <i class="fas fa-book-open" style="font-size: 2rem; color: var(--primary-color);"></i>
-          </div>
-          <h3>جاهز للبحث</h3>
-          <p style="color: #7f8c8d;">تم تحميل القرآن الكريم كاملاً. أدخل كلمة للبحث عنها.</p>
-        </div>
-      </div>
+      <div id="loading" style="display:none; color: var(--primary-color); margin: 2rem;"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</div>
+      <div id="resultsArea"></div>
     </div>
   </div>
-
   <script>
-    // Splash Screen Logic
     window.addEventListener('load', () => {
       setTimeout(() => {
-        const splash = document.getElementById('splash-screen');
-        if (splash) splash.classList.add('hide-splash');
-        const content = document.querySelector('.app-content');
-        if (content) content.classList.add('show-content');
+        document.getElementById('splash-screen').classList.add('hide-splash');
+        document.querySelector('.app-content').classList.add('show-content');
       }, 2000);
     });
-
     function toggleClearBtn() {
       const input = document.getElementById('searchInput');
-      const clearBtn = document.getElementById('clearBtn');
-      clearBtn.style.display = input.value ? 'block' : 'none';
+      document.getElementById('clearBtn').style.display = input.value ? 'block' : 'none';
     }
-
     function clearSearch() {
       const input = document.getElementById('searchInput');
-      input.value = '';
-      toggleClearBtn();
-      input.focus();
+      input.value = ''; toggleClearBtn(); input.focus();
     }
-
-    function scrollToTop() {
-      const container = document.querySelector('.results-container');
-      if (container) {
-        container.scrollTo({ top: 0, behavior: 'smooth' });
-      } else {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-    }
-
-    function scrollToBottom() {
-      const container = document.querySelector('.results-container');
-      if (container) {
-        container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
-      } else {
-        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-      }
-    }
-
+    function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    function scrollToBottom() { window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }); }
     async function performSearch() {
-      const queryInput = document.getElementById('searchInput').value.trim();
-      if (!queryInput) return;
-
-      const loading = document.getElementById('loading');
-      const resultsArea = document.getElementById('resultsArea');
-      
-      loading.style.display = 'block';
-
-      function normalize(text) {
-        if (!text) return "";
-        return text
-          .normalize("NFD")
-          .replace(/[\\\\u064B-\\\\u0652\\\\u0670\\\\u06E1\\\\u06D6-\\\\u06ED]/g, "")
-          .replace(/[\\\\u0671]/g, "ا")
-          .replace(/[أإآ]/g, "ا")
-          .replace(/ؤ/g, "و")
-          .replace(/[ئى]/g, "ي")
-          .replace(/ة/g, "ه")
-          .replace(/ء/g, "")
-          .replace(/\\\\u0640/g, "")
-          .replace(/\\\\s+/g, " ")
-          .trim();
-      }
-
-      function highlightText(text, term) {
-        if (!term) return text;
-        const normText = normalize(text);
-        const normTerm = normalize(term);
-        if (!normText.includes(normTerm)) return text;
-        return "<span class='highlight'>" + text + "</span>";
-      }
-
+      const query = document.getElementById('searchInput').value.trim();
+      if (!query) return;
+      document.getElementById('loading').style.display = 'block';
       try {
-        const response = await fetch('/api/search?q=' + encodeURIComponent(queryInput));
-        const data = await response.json();
-        
-        loading.style.display = "none";
-
+        const res = await fetch('/api/search?q=' + encodeURIComponent(query));
+        const data = await res.json();
+        document.getElementById('loading').style.display = 'none';
         if (data.results.length === 0) {
-          resultsArea.innerHTML = "<p>لم يتم العثور على نتائج.</p>";
+          document.getElementById('resultsArea').innerHTML = "<p>لم يتم العثور على نتائج.</p>";
           return;
         }
-
-        let html = \`
-          <div class="stats-table-wrapper">
-            <table class="stats-table">
-              <thead>
-                <tr>
-                  <th>عدد الآيات</th>
-                  <th>القيمة العددية</th>
-                  <th>الإجمالي الحسابي</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>\${data.totalOccurrences}</td>
-                  <td>\${data.wordValue}</td>
-                  <td class="total-cell">\${data.totalCalculation.toLocaleString()}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-direction: row-reverse;">
-            <h2 style="margin: 0;">نتائج البحث (\${data.totalResults})</h2>
-          </div>
-
-          <div class='results-container'>
-            <table class='results-table'>
-              <thead class='table-header-fixed'>
-                <tr>
-                  <th style='width: 50px;'>رقم</th>
-                  <th style='width: 100px;'>السورة</th>
-                  <th style='width: 50px;'>الآية</th>
-                  <th>النص</th>
-                </tr>
-              </thead>
-              <tbody>\`;
-
-        data.results.forEach(res => {
-          html += "<tr>" +
-              "<td style='font-weight: bold;'>" + res.chapterId + "</td>" +
-              "<td>" + res.chapterName + "</td>" +
-              "<td>" + res.verseId + "</td>" +
-              "<td>" +
-                "<div class='arabic-text'>" + highlightText(res.text, queryInput) + "</div>" +
-              "</td>" +
-            "</tr>";
+        let html = '<div class="stats-table-wrapper"><table class="stats-table"><thead><tr><th>عدد الآيات</th><th>القيمة العددية</th><th>الإجمالي الحسابي</th></tr></thead><tbody><tr><td>' + data.totalOccurrences + '</td><td>' + data.wordValue + '</td><td>' + data.totalCalculation.toLocaleString() + '</td></tr></tbody></table></div>';
+        html += '<div class="results-container"><table class="results-table"><thead class="table-header-fixed"><tr><th style="width:50px">رقم</th><th style="width:100px">السورة</th><th style="width:50px">الآية</th><th>النص</th></tr></thead><tbody>';
+        data.results.forEach(r => {
+          html += '<tr><td>' + r.chapterId + '</td><td>' + r.chapterName + '</td><td>' + r.verseId + '</td><td class="arabic-text">' + r.text + '</td></tr>';
         });
-
-        html += "</tbody></table></div>";
-        if (data.totalResults > 100) {
-          html += "<p style='margin-top: 1rem; color: #7f8c8d;'>عرض أول 100 نتيجة فقط...</p>";
-        }
-        resultsArea.innerHTML = html;
-
-      } catch (err) {
-        console.error(err);
-        loading.style.display = "none";
-        resultsArea.innerHTML = "<p>حدث خطأ أثناء البحث.</p>";
+        html += '</tbody></table></div>';
+        document.getElementById('resultsArea').innerHTML = html;
+      } catch (e) {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('resultsArea').innerHTML = "<p>خطأ في البحث.</p>";
       }
     }
-    
-    document.getElementById('searchInput').addEventListener('keypress', function (e) {
-      if (e.key === 'Enter') {
-        performSearch();
-      }
-    });
+    document.getElementById('searchInput').addEventListener('keypress', e => { if (e.key === 'Enter') performSearch(); });
   </script>
 </body>
 </html>`;
-    res.end(htmlContent);
+    res.end(html);
   }
 });
 
 server.listen(PORT, HOST, () => {
-  console.log('Quran JSON API server running at http://' + HOST + ':' + PORT);
+  console.log('Server running at http://' + HOST + ':' + PORT);
 });

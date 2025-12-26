@@ -341,6 +341,7 @@ const server = http.createServer((req, res) => {
   <meta name="apple-mobile-web-app-status-bar-style" content="green">
   <meta name="apple-mobile-web-app-title" content="القرآن الكريم">
   <title>القرآن الكريم</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%232ecc71' width='192' height='192'/><text x='96' y='140' font-size='100' font-weight='bold' fill='white' text-anchor='middle' font-family='Arial'>📖</text></svg>">
   <link rel="stylesheet" href="/css/all-local.min.css">
@@ -693,7 +694,8 @@ const server = http.createServer((req, res) => {
     }
   </style>
 </head>
-<body>
+${new Date().getTime()}
+  <body>
   <!-- Splash Screen -->
   <div id="splash-screen">
     <div class="splash-logo"><i class="fas fa-book-open"></i></div>

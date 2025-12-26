@@ -262,20 +262,14 @@ const server = http.createServer((req, res) => {
     const wordValue = calculateGematria(query);
     let results = [];
     let totalOccurrences = 0;
-    
-    // Map to count occurrences per chapter
-    const chapterCounts = {};
 
     quranCache.forEach(chapter => {
-      let countInChapter = 0;
-      
       chapter.verses.forEach(verse => {
         let countInVerse = 0;
 
         if (searchNormalized && verse.normText.includes(searchNormalized)) {
           const matches = verse.normText.split(searchNormalized).length - 1;
           countInVerse += matches;
-          countInChapter += matches;
         }
 
         if (countInVerse > 0) {
@@ -284,15 +278,11 @@ const server = http.createServer((req, res) => {
             chapterId: chapter.id,
             chapterName: chapter.name,
             verseId: verse.id,
-            text: verse.text
+            text: verse.text,
+            occurrences: countInVerse
           });
         }
       });
-      
-      // Store count for this chapter
-      if (countInChapter > 0) {
-        chapterCounts[chapter.id] = countInChapter;
-      }
     });
 
     const totalCalculation = wordValue * totalOccurrences;
@@ -313,8 +303,7 @@ const server = http.createServer((req, res) => {
       modulo66Result,
       modulo92Result,
       letterCounts,
-      uniqueLetterCount,
-      chapterCounts
+      uniqueLetterCount
     }));
     return;
   }
@@ -874,7 +863,6 @@ const server = http.createServer((req, res) => {
               <tbody>\`;
 
         data.results.forEach(res => {
-          const occurrences = data.chapterCounts[res.chapterId] || 0;
           html += "<tr>" +
               "<td style='font-weight: bold;'>" + res.chapterId + "</td>" +
               "<td>" + res.chapterName + "</td>" +
@@ -882,7 +870,7 @@ const server = http.createServer((req, res) => {
               "<td>" +
                 "<div class='arabic-text'>" + highlightText(res.text, queryInput) + "</div>" +
               "</td>" +
-              "<td style='text-align: center; font-weight: bold; color: var(--primary-color);'>" + occurrences + "</td>" +
+              "<td style='text-align: center; font-weight: bold; color: var(--primary-color);'>" + res.occurrences + "</td>" +
             "</tr>";
         });
 

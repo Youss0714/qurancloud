@@ -275,17 +275,29 @@ const server = http.createServer((req, res) => {
       chapter.verses.forEach(verse => {
         let countInVerse = 0;
 
-        // Try exact match first
-        if (searchNormalized && verse.normText.includes(searchNormalized)) {
-          const matches = verse.normText.split(searchNormalized).length - 1;
-          countInVerse += matches;
-        } 
-        
-        // Flexible match (ignoring Alifs)
-        // Restricted to specific cases or when no exact match found
-        if (countInVerse === 0 && !isCommonName && searchFlexible && normalizeFlexible(verse.text).includes(searchFlexible)) {
-          const matches = normalizeFlexible(verse.text).split(searchFlexible).length - 1;
-          countInVerse += matches;
+        // For Allah name variants, use word boundary matching
+        if (isCommonName) {
+          // Split verse into words and check each word against all variants
+          const verseWords = verse.text.split(/\s+/);
+          verseWords.forEach(word => {
+            const normalizedWord = normalize(word);
+            if (allaVervariants.some(variant => normalize(variant) === normalizedWord)) {
+              countInVerse++;
+            }
+          });
+        } else {
+          // Try exact match first
+          if (searchNormalized && verse.normText.includes(searchNormalized)) {
+            const matches = verse.normText.split(searchNormalized).length - 1;
+            countInVerse += matches;
+          } 
+          
+          // Flexible match (ignoring Alifs)
+          // Restricted to specific cases or when no exact match found
+          if (countInVerse === 0 && searchFlexible && normalizeFlexible(verse.text).includes(searchFlexible)) {
+            const matches = normalizeFlexible(verse.text).split(searchFlexible).length - 1;
+            countInVerse += matches;
+          }
         }
 
         if (countInVerse > 0) {

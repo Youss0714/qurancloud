@@ -648,11 +648,8 @@ const server = http.createServer((req, res) => {
       word-wrap: break-word;
     }
     .highlight {
-      background-color: #ffeb3b;
-      color: #000;
       padding: 0 2px;
       border-radius: 2px;
-      font-weight: bold;
     }
     .loading { margin: 2rem; color: var(--primary-color); display: none; }
     

@@ -766,15 +766,15 @@ const server = http.createServer((req, res) => {
         if (!text) return "";
         return text
           .normalize("NFD")
-          .replace(/[\\u064B-\\u0652\\u0670\\u06E1\\u06D6-\\u06ED]/g, "")
-          .replace(/[\\u0671]/g, "ا")
+          .replace(/[\u064B-\u0652\u0653-\u0670\u06D6-\u06ED\u06E1\u0640]/g, "")
+          .replace(/[\u0671]/g, "ا")
           .replace(/[أإآ]/g, "ا")
           .replace(/ؤ/g, "و")
           .replace(/[ئى]/g, "ي")
           .replace(/ة/g, "ه")
           .replace(/ء/g, "")
-          .replace(/\\u0640/g, "")
-          .replace(/\\s+/g, " ")
+          .replace(/\u0640/g, "")
+          .replace(/\s+/g, " ")
           .trim();
       }
 

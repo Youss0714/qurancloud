@@ -29,4 +29,18 @@ This project serves Quran data in JSON format as a REST API, providing access to
 - Native HTTP module (no external dependencies)
 
 ## Recent Changes
+- December 26, 2025: Added modulo 98 calculation function (T/98) to display remainder of (N*O) divided by 98
 - December 25, 2025: Initial setup on Replit environment
+
+## Features
+- **Gematria Calculation**: Calculates numeric values for Arabic words based on letter values
+- **Search Functionality**: Full-text search across all Quranic verses with normalization
+- **Modulo 98 Calculation (T/98)**: Computes (wordValue * occurrences) mod 98
+  - Formula: D = P - (floor(P/98) * 98), where P = N * O
+  - Example: N=66, O=2667 → P=176022 → D=14
+
+## Statistics Displayed in Search Results
+- Number of verses (عدد الآيات)
+- Numeric word value (القيمة العددية)
+- Total calculation: wordValue × occurrences (الإجمالي الحسابي)
+- T/98: Modulo 98 result

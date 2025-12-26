@@ -43,6 +43,15 @@ function calculateGematria(text) {
   return total;
 }
 
+function calculateModulo98(N, O) {
+  const P = N * O;
+  const Q = P / 98;
+  const E = Math.floor(Q);
+  const R = E * 98;
+  const D = P - R;
+  return D;
+}
+
 try {
   // Use the Arabic only file
   const data = JSON.parse(fs.readFileSync('./quran.json', 'utf8'));
@@ -127,6 +136,7 @@ const server = http.createServer((req, res) => {
     });
 
     const totalCalculation = wordValue * totalOccurrences;
+    const modulo98Result = calculateModulo98(wordValue, totalOccurrences);
 
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ 
@@ -134,7 +144,8 @@ const server = http.createServer((req, res) => {
       totalOccurrences, 
       totalResults: results.length,
       wordValue,
-      totalCalculation
+      totalCalculation,
+      modulo98Result
     }));
     return;
   }
@@ -580,6 +591,10 @@ const server = http.createServer((req, res) => {
             <div class="stat-card total">
               <div class="label">الإجمالي الحسابي</div>
               <div class="value">\${data.totalCalculation.toLocaleString()}</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">T/98</div>
+              <div class="value">\${data.modulo98Result}</div>
             </div>
           </div>
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-direction: row-reverse;">

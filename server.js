@@ -58,12 +58,6 @@ function normalize(text) {
     .replace(/\s+/g, " ")
     .trim();
   
-  // Remove definite article "ال" at the beginning for better matching
-  normalized = normalized.replace(/^ال/, "");
-  
-  // Normalize common Quranic variants: ان -> ن and وا -> و and ه -> ة
-  normalized = normalized.replace(/ان(?=[^ا]|$)/g, "ن"); // "ان" -> "ن" (but not "ا" followed by ن)
-  
   return normalized;
 }
 

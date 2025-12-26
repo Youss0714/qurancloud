@@ -571,7 +571,8 @@ const server = http.createServer((req, res) => {
       }
       .arabic-text {
         font-size: 1.2rem;
-        line-height: 1.8;
+        line-height: 2.0;
+        max-height: 150px;
       }
     }
     
@@ -586,7 +587,8 @@ const server = http.createServer((req, res) => {
       }
       .arabic-text {
         font-size: 1.2rem;
-        line-height: 1.8;
+        line-height: 2.0;
+        max-height: 120px;
       }
       .stat-card {
         min-width: calc(50% - 10px);
@@ -639,7 +641,11 @@ const server = http.createServer((req, res) => {
       font-family: 'Amiri', serif;
       font-size: 1.8rem;
       direction: rtl;
-      line-height: 2.5;
+      line-height: 2.0;
+      max-height: 200px;
+      overflow-y: auto;
+      padding: 10px;
+      word-wrap: break-word;
     }
     .highlight {
       background-color: #ffeb3b;

@@ -325,7 +325,12 @@ const server = http.createServer((req, res) => {
   }
   
   if (pathname === '/') {
-    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.writeHead(200, { 
+      'Content-Type': 'text/html',
+      'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    });
     res.end(`<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>

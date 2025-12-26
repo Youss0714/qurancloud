@@ -46,7 +46,7 @@ let quranCache = null;
 
 function normalize(text) {
   if (!text) return "";
-  return text
+  let normalized = text
     .normalize("NFD")
     .replace(/[\u064B-\u0652\u0653-\u0670\u06D6-\u06ED\u06E1\u0640]/g, "") // Suppression de TOUS les diacritiques
     .replace(/[\u0671]/g, "ا") // Alif Wasla ٱ -> ا
@@ -57,6 +57,14 @@ function normalize(text) {
     .replace(/ء/g, "") // Suppression Hamza isolée
     .replace(/\s+/g, " ")
     .trim();
+  
+  // Remove definite article "ال" at the beginning for better matching
+  normalized = normalized.replace(/^ال/, "");
+  
+  // Normalize common Quranic variants: ان -> ن and وا -> و and ه -> ة
+  normalized = normalized.replace(/ان(?=[^ا]|$)/g, "ن"); // "ان" -> "ن" (but not "ا" followed by ن)
+  
+  return normalized;
 }
 
 function normalizeForLetterCount(text) {

@@ -815,7 +815,29 @@ const server = http.createServer((req, res) => {
               <div class="label">T/92</div>
               <div class="value">\${data.modulo92Result}</div>
             </div>
-          </div>
+          </div>\`;
+
+        // Add letter count statistics BEFORE table
+        if (data.letterCounts) {
+          const totalLetters = Object.values(data.letterCounts).reduce((sum, count) => sum + count, 0);
+          html += "<div style='margin: 2rem 0; display: flex; gap: 1rem; flex-wrap: wrap;'>";
+          
+          // Total letters box
+          html += "<div style='flex: 1; min-width: 150px; padding: 1.5rem; background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); border-radius: 8px; text-align: center; color: white;'>";
+          html += "<div style='font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.5rem;'>عدد الحروف الكلي</div>";
+          html += "<div style='font-size: 2.5rem; font-weight: bold;'>" + totalLetters + "</div>";
+          html += "</div>";
+          
+          // Unique letters box
+          html += "<div style='flex: 1; min-width: 150px; padding: 1.5rem; background: linear-gradient(135deg, #e67e22 0%, #d35400 100%); border-radius: 8px; text-align: center; color: white;'>";
+          html += "<div style='font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.5rem;'>عدد الحروف المختلفة</div>";
+          html += "<div style='font-size: 2.5rem; font-weight: bold;'>" + data.uniqueLetterCount + "</div>";
+          html += "</div>";
+          
+          html += "</div>";
+        }
+
+        html += \`
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-direction: row-reverse;">
             <h2 style="margin: 0;">نتائج البحث</h2>
           </div>
@@ -843,26 +865,6 @@ const server = http.createServer((req, res) => {
         });
 
         html += "</tbody></table></div>";
-        
-        // Add letter count statistics at the bottom
-        if (data.letterCounts) {
-          const totalLetters = Object.values(data.letterCounts).reduce((sum, count) => sum + count, 0);
-          html += "<div style='margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;'>";
-          
-          // Total letters box
-          html += "<div style='flex: 1; min-width: 200px; padding: 1.5rem; background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); border-radius: 8px; text-align: center; color: white;'>";
-          html += "<div style='font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.5rem;'>عدد الحروف الكلي</div>";
-          html += "<div style='font-size: 2.5rem; font-weight: bold;'>" + totalLetters + "</div>";
-          html += "</div>";
-          
-          // Unique letters box
-          html += "<div style='flex: 1; min-width: 200px; padding: 1.5rem; background: linear-gradient(135deg, #e67e22 0%, #d35400 100%); border-radius: 8px; text-align: center; color: white;'>";
-          html += "<div style='font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.5rem;'>عدد الحروف المختلفة</div>";
-          html += "<div style='font-size: 2.5rem; font-weight: bold;'>" + data.uniqueLetterCount + "</div>";
-          html += "</div>";
-          
-          html += "</div>";
-        }
         
         if (data.totalResults > 100) {
           html += "<p style='margin-top: 1rem; color: #7f8c8d;'>عرض أول 100 نتيجة فقط...</p>";

@@ -262,9 +262,10 @@ const server = http.createServer((req, res) => {
       return;
     }
 
-    // Special handling for Allah name variants
-    const allaVervariants = ['الله', 'اللَّه', 'لله', 'للَّه', 'للاه'];
-    const isCommonName = allaVervariants.some(v => normalize(v) === normalize(query));
+    // Special handling for Allah name variants - distinguish between "Allah" and "for/to Allah"
+    const allahVariants = ['الله', 'اللَّه', 'الاله'];  // Just "Allah"
+    const forAllahVariants = ['لله', 'للَّه', 'للاه'];   // "For/To Allah" (with preposition)
+    const isCommonName = allahVariants.some(v => normalize(v) === normalize(query)) || forAllahVariants.some(v => normalize(v) === normalize(query));
     const searchNormalized = normalize(query);
     const searchFlexible = normalizeFlexible(query);
     const wordValue = calculateGematria(query);
@@ -277,11 +278,16 @@ const server = http.createServer((req, res) => {
 
         // For Allah name variants, use word boundary matching
         if (isCommonName) {
-          // Split verse into words and check each word against all variants
+          // Split verse into words and check each word against appropriate variants
           const verseWords = verse.text.split(/\s+/);
+          const isSearchingForAllah = allahVariants.some(v => normalize(v) === normalize(query));
+          const isSearchingForForAllah = forAllahVariants.some(v => normalize(v) === normalize(query));
+          
           verseWords.forEach(word => {
             const normalizedWord = normalize(word);
-            if (allaVervariants.some(variant => normalize(variant) === normalizedWord)) {
+            if (isSearchingForAllah && allahVariants.some(variant => normalize(variant) === normalizedWord)) {
+              countInVerse++;
+            } else if (isSearchingForForAllah && forAllahVariants.some(variant => normalize(variant) === normalizedWord)) {
               countInVerse++;
             }
           });

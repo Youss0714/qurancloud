@@ -858,15 +858,24 @@ const server = http.createServer((req, res) => {
           // Display unique letters
           html += "<div style='margin-top: 1rem; font-size: 1.2rem; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; direction: rtl;'>";
           
+          let uniqueSum = 0;
+          const letterValuesMap = {
+            'ا': 1, 'ب': 2, 'ج': 3, 'د': 4, 'ه': 5, 'و': 6, 'ز': 7, 'ح': 8, 'ط': 9,
+            'ي': 10, 'ك': 20, 'ل': 30, 'م': 40, 'ن': 50, 'ص': 60, 'ع': 70, 'ف': 80, 'ض': 90,
+            'ق': 100, 'ر': 200, 'س': 300, 'ت': 400, 'ث': 500, 'خ': 600, 'ذ': 700, 'ظ': 800, 'غ': 900,
+            'ش': 1000, 'أ': 1, 'إ': 1, 'آ': 1, 'ٱ': 1, 'ة': 5, 'ى': 10, 'ئ': 10, 'ؤ': 6, 'ٰ': 1, 'هـ': 5, 'ء': 1
+          };
+
           Object.entries(data.letterCounts).forEach(([letter, count]) => {
             if (count > 0) {
               html += "<span style='background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 6px; min-width: 35px;'>" + letter + "</span>";
+              uniqueSum += (letterValuesMap[letter] || 0);
             }
           });
           html += "</div>";
           
           // Display total value of unique letters
-          html += "<div style='margin-top: 1rem; font-size: 1.2rem; font-weight: bold;'>Valeur numérique unique : " + data.wordValue + "</div>";
+          html += "<div style='margin-top: 1rem; font-size: 1.2rem; font-weight: bold;'>Somme des valeurs uniques : " + uniqueSum + "</div>";
           html += "</div>";
           html += "</div>";
           

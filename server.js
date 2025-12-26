@@ -571,12 +571,19 @@ const server = http.createServer((req, res) => {
         font-size: 0.65rem;
       }
       .arabic-text {
-        font-size: 1rem;
-        line-height: 1.6;
+        font-size: 1.2rem;
+        line-height: 1.8;
       }
       .stat-card {
-        min-width: 120px;
+        min-width: calc(50% - 10px);
         max-width: none;
+        padding: 10px;
+      }
+      .stat-card .value {
+        font-size: 1.1rem;
+      }
+      .stat-card .label {
+        font-size: 0.75rem;
       }
       h1 { font-size: 1.8rem; }
     }

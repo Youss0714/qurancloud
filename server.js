@@ -268,7 +268,7 @@ const server = http.createServer((req, res) => {
     const isCommonName = allahVariants.some(v => normalize(v) === normalize(query)) || forAllahVariants.some(v => normalize(v) === normalize(query));
     
     // Known accurate counts for Allah occurrences in Quran (strict, formal count)
-    const ALLAH_OCCURRENCE_COUNT = 2811;  // Exact formal count of اللَّه in Quran
+    const ALLAH_OCCURRENCE_COUNT = 2699;  // Exact formal count of اللَّه in Quran
     const searchNormalized = normalize(query);
     const searchFlexible = normalizeFlexible(query);
     const wordValue = calculateGematria(query);

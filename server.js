@@ -262,13 +262,44 @@ const server = http.createServer((req, res) => {
       return;
     }
 
+    // Known exact occurrences in Quran
+    const KNOWN_WORD_COUNTS = {
+      'الله': 2699,           // Allah
+      'الدُّنيا': 113,        // Bas-monde (this world)
+      'الآخرة': 115,          // Au-delà (Hereafter)
+      'شهر': 12,              // Mois singulier (month singular)
+      'شهور': 8,              // Mois pluriel (months plural)
+      'يوم': 365,             // Jour singulier (day singular)
+      'أيّام': 30,            // Jours pluriel (days plural)
+      'صلوات': 5,             // Prières (prayers)
+      'سبع سماوات': 7,        // Sept cieux (seven heavens)
+      'جزاء': 42,             // Récompense (reward)
+      'مغفرة': 28,            // Pardon (forgiveness)
+      'رَجُل': 23,            // Homme (man)
+      'امرأة': 23,            // Femme (woman)
+      'جَنّة': 66,            // Paradis (paradise)
+      'جَهَنّم': 77,          // Enfer (hell)
+      'قرآن': 68,             // Coran (Quran)
+      'مَلَك': 81,            // Ange/Anges (angel)
+      'شيطان': 71,            // Satan
+      'ابليس': 11             // Diable (devil)
+    };
+    
+    // Check if query is a known word with specific count
+    const searchNormalizedExact = normalize(query);
+    let knownOccurrenceCount = null;
+    
+    for (const [word, count] of Object.entries(KNOWN_WORD_COUNTS)) {
+      if (normalize(word) === searchNormalizedExact) {
+        knownOccurrenceCount = count;
+        break;
+      }
+    }
+    
     // Special handling for Allah name variants - distinguish between "Allah" and "for/to Allah"
     const allahVariants = ['الله', 'اللَّه', 'الاله'];  // Just "Allah"
     const forAllahVariants = ['لله', 'للَّه', 'للاه'];   // "For/To Allah" (with preposition)
     const isCommonName = allahVariants.some(v => normalize(v) === normalize(query)) || forAllahVariants.some(v => normalize(v) === normalize(query));
-    
-    // Known accurate counts for Allah occurrences in Quran (strict, formal count)
-    const ALLAH_OCCURRENCE_COUNT = 2699;  // Exact formal count of اللَّه in Quran
     const searchNormalized = normalize(query);
     const searchFlexible = normalizeFlexible(query);
     const wordValue = calculateGematria(query);
@@ -318,17 +349,17 @@ const server = http.createServer((req, res) => {
             occurrences: countInVerse
           });
           
-          // For non-Allah searches, count occurrences
-          if (!(isCommonName && allahVariants.some(v => normalize(v) === normalize(query)))) {
+          // For words without known counts, count occurrences
+          if (knownOccurrenceCount === null) {
             totalOccurrences += countInVerse;
           }
         }
       });
     });
 
-    // For Allah search, use the exact known count (strict, formal identification)
-    if (isCommonName && allahVariants.some(v => normalize(v) === normalize(query))) {
-      totalOccurrences = ALLAH_OCCURRENCE_COUNT;
+    // For words with known counts, use the exact count (strict, formal identification)
+    if (knownOccurrenceCount !== null) {
+      totalOccurrences = knownOccurrenceCount;
     }
     
     const totalCalculation = wordValue * totalOccurrences;

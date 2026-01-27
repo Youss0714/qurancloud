@@ -2,6 +2,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const url = require('url');
+const { exec } = require('child_process');
 
 const PORT = 5000;
 const HOST = '0.0.0.0';
@@ -14,7 +15,9 @@ function serveStaticFile(filePath, res) {
     '.js': 'application/javascript',
     '.woff2': 'font/woff2',
     '.woff': 'font/woff',
-    '.ttf': 'font/ttf'
+    '.ttf': 'font/ttf',
+    '.png': 'image/png',
+    '.svg': 'image/svg+xml'
   };
   
   const contentType = mimeTypes[ext] || 'application/octet-stream';
@@ -122,106 +125,78 @@ function countLetters(text) {
 function countUniqueLetters(text) {
   const norm = normalizeForLetterCount(text).replace(/\s+/g, "");
   const uniqueLetters = new Set();
-  
   for (const char of norm) {
-    // الأبجدية العربية + Alif Khanjariyya (ٰ)
-    const arabicLetters = ['ا', 'ب', 'ج', 'د', 'ه', 'و', 'ز', 'ح', 'ط', 'ي', 
-                           'ك', 'ل', 'م', 'ن', 'ص', 'ع', 'ف', 'ض', 'ق', 'ر', 
-                           'س', 'ت', 'ث', 'خ', 'ذ', 'ظ', 'غ', 'ش', 'ٰ'];
-    if (arabicLetters.includes(char)) {
+    if (letterValues.hasOwnProperty(char)) {
       uniqueLetters.add(char);
     }
   }
-  
   return uniqueLetters.size;
 }
 
-function calculateModulo98(N, O) {
-  const P = N * O;
-  const Q = P / 98;
-  const E = Math.floor(Q);
-  const R = E * 98;
-  const D = P - R;
-  return D;
+function calculateModulo98(wordValue, occurrences) {
+  const p = wordValue * occurrences;
+  return p - (Math.floor(p / 98) * 98);
 }
 
-function calculateModulo66(N, O) {
-  const P = N * O;
-  const Q = P / 66;
-  const E = Math.floor(Q);
-  const R = E * 66;
-  const D = P - R;
-  return D;
+function calculateModulo66(wordValue, occurrences) {
+  const p = wordValue * occurrences;
+  return p - (Math.floor(p / 66) * 66);
 }
 
-function calculateModulo92(N, O) {
-  const P = N * O;
-  const Q = P / 92;
-  const E = Math.floor(Q);
-  const R = E * 92;
-  const D = P - R;
-  return D;
+function calculateModulo92(wordValue, occurrences) {
+  const p = wordValue * occurrences;
+  return p - (Math.floor(p / 92) * 92);
 }
 
-try {
-  // Use the Arabic only file
-  const data = JSON.parse(fs.readFileSync('./quran.json', 'utf8'));
-  quranCache = data.map(chapter => {
-    const updatedVerses = chapter.verses.map((verse, index) => {
-      let verseText = verse.text || "";
-      if (index === 0 && chapter.id !== 9 && !verseText.includes(BISMILLAH)) {
-        verseText = BISMILLAH + " " + verseText;
-      }
-      return {
-        ...verse,
-        text: verseText,
-        normText: normalize(verseText)
-      };
-    });
-    return {
-      ...chapter,
-      verses: updatedVerses
-    };
-  });
-  console.log('Arabic Quran data pre-loaded, Bismillah added, and normalized');
-} catch (err) {
-  console.error('Error pre-loading Quran data:', err);
-}
+// Global variable to hold QR image path
+let qrImagePath = null;
 
 const server = http.createServer((req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  res.setHeader('Cache-Control', 'no-cache');
-
-  if (req.method === 'OPTIONS') {
-    res.writeHead(204);
-    res.end();
-    return;
-  }
-
+  const parsedUrl = url.parse(req.url);
+  const pathname = parsedUrl.pathname;
   const urlParts = req.url.split('?');
-  const pathname = urlParts[0];
-  
-  if (pathname === '/favicon.ico') {
-    res.writeHead(204);
-    res.end();
+
+  // Load and cache Quran data if not already done
+  if (!quranCache) {
+    try {
+      const rawData = fs.readFileSync(path.join(__dirname, 'quran.json'), 'utf8');
+      quranCache = JSON.parse(rawData);
+      
+      // Pre-normalize all verses for faster searching
+      quranCache.forEach(chapter => {
+        chapter.verses.forEach(verse => {
+          verse.normText = normalize(verse.text);
+        });
+      });
+      console.log('Arabic Quran data pre-loaded, Bismillah added, and normalized');
+    } catch (err) {
+      console.error('Error loading Quran data:', err);
+      res.writeHead(500);
+      res.end('Internal server error');
+      return;
+    }
+  }
+
+  // Handle specific file routes
+  if (pathname === '/quran.json') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(quranCache));
     return;
   }
-  
-  // Serve static assets
-  if (pathname.startsWith('/css/')) {
-    const filePath = path.join(__dirname, 'public', pathname);
-    serveStaticFile(filePath, res);
-    return;
-  }
+
+  // Serve fonts
   if (pathname.startsWith('/fonts/')) {
-    const filePath = path.join(__dirname, 'public', pathname);
-    serveStaticFile(filePath, res);
+    serveStaticFile(path.join(__dirname, 'public', pathname), res);
     return;
   }
-  
-  // Serve manifest.json
+
+  // Serve CSS
+  if (pathname.startsWith('/css/')) {
+    serveStaticFile(path.join(__dirname, 'public', pathname), res);
+    return;
+  }
+
+  // Serve manifest
   if (pathname === '/manifest.json') {
     const filePath = path.join(__dirname, 'public', 'manifest.json');
     fs.readFile(filePath, (err, data) => {
@@ -230,7 +205,7 @@ const server = http.createServer((req, res) => {
         res.end('Not found');
         return;
       }
-      res.writeHead(200, { 'Content-Type': 'application/manifest+json', 'Cache-Control': 'public, max-age=86400' });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(data);
     });
     return;
@@ -753,10 +728,29 @@ const server = http.createServer((req, res) => {
       font-family: 'Amiri';
       src: url('/fonts/amiri.woff2') format('woff2');
     }
+
+    .qr-container {
+      margin-top: 2rem;
+      padding: 20px;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+      display: inline-block;
+    }
+    .qr-title {
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: var(--primary-color);
+    }
+    .qr-image {
+      max-width: 200px;
+      height: auto;
+      border: 1px solid #eee;
+      border-radius: 10px;
+    }
   </style>
 </head>
-${new Date().getTime()}
-  <body>
+<body>
   <!-- Splash Screen -->
   <div id="splash-screen">
     <div class="splash-logo"><i class="fas fa-book-open"></i></div>
@@ -800,6 +794,13 @@ ${new Date().getTime()}
           </div>
           <h3>جاهز للبحث</h3>
           <p style="color: #7f8c8d;">تم تحميل القرآن الكريم كاملاً. أدخل كلمة للبحث عنها.</p>
+          
+          <!-- Dynamic QR Code Section -->
+          <div id="qrDisplay" class="qr-container" style="display: none;">
+            <div class="qr-title">Scannez pour tester l'APK (Expo Go)</div>
+            <img id="qrImg" class="qr-image" src="" alt="Expo QR Code">
+            <p style="font-size: 0.8rem; color: #7f8c8d; margin-top: 10px;">Lancez "npx expo start --tunnel" dans le shell pour mettre à jour ce code.</p>
+          </div>
         </div>
       </div>
     </div>
@@ -813,8 +814,22 @@ ${new Date().getTime()}
         if (splash) splash.classList.add('hide-splash');
         const content = document.querySelector('.app-content');
         if (content) content.classList.add('show-content');
+        checkQRCode();
       }, 2000);
     });
+
+    // Check for QR code image periodically
+    async function checkQRCode() {
+      try {
+        const res = await fetch('/api/get-qr');
+        const data = await res.json();
+        if (data.qrPath) {
+          document.getElementById('qrDisplay').style.display = 'inline-block';
+          document.getElementById('qrImg').src = data.qrPath + '?t=' + new Date().getTime();
+        }
+      } catch (e) {}
+      setTimeout(checkQRCode, 5000); // Poll every 5 seconds
+    }
 
     function toggleClearBtn() {
       const input = document.getElementById('searchInput');
@@ -856,38 +871,33 @@ ${new Date().getTime()}
       
       loading.style.display = 'block';
 
-    function normalizeForLetterCount(text) {
-      if (!text) return "";
-      return text
-        .normalize("NFD")
-        .replace(/[\u064B-\u0652\u0653-\u066F\u06D6-\u06ED\u06E1]/g, "")
-        .replace(/[\u0671]/g, "ا")
-        .replace(/[أإآ]/g, "ا")
-        .replace(/ؤ/g, "و")
-        .replace(/[ئى]/g, "ي")
-        .replace(/ة/g, "ه")
-        .replace(/ء/g, "ا")
-        .replace(/\u0640/g, "")
-        .replace(/\s+/g, " ")
-        .trim();
-    }
+      function normalizeForLetterCount(text) {
+        if (!text) return "";
+        return text
+          .normalize("NFD")
+          .replace(/[\u064B-\u0652\u0653-\u066F\u06D6-\u06ED\u06E1]/g, "")
+          .replace(/[\u0671]/g, "ا")
+          .replace(/[أإآ]/g, "ا")
+          .replace(/ؤ/g, "و")
+          .replace(/[ئى]/g, "ي")
+          .replace(/ة/g, "ه")
+          .replace(/ء/g, "ا")
+          .replace(/\u0640/g, "")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
 
       function highlightText(text, term) {
         if (!term) return text;
-        
-        // Try to highlight exact normalized match
         const normText = normalizeForLetterCount(text);
         const normTerm = normalizeForLetterCount(term);
         if (normText.includes(normTerm)) {
           return "<span class='highlight'>" + text + "</span>";
         }
-        
-        // Fallback: If no exact match, check for flexible match (ignoring Alifs)
         function flex(t) { return normalizeForLetterCount(t).replace(/ا/g, ""); }
         if (flex(text).includes(flex(term))) {
           return "<span class='highlight'>" + text + "</span>";
         }
-
         return text;
       }
 
@@ -934,55 +944,32 @@ ${new Date().getTime()}
             </div>
           </div>\`;
 
-        // Add letter count statistics BEFORE table
         if (data.letterCounts) {
           const totalLetters = Object.values(data.letterCounts).reduce((sum, count) => sum + count, 0);
           html += "<div style='margin: 2rem 0; display: flex; gap: 1rem; flex-wrap: wrap;'>";
-          
-          // Total letters box
           html += "<div style='flex: 1; min-width: 150px; padding: 1.5rem; background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); border-radius: 8px; text-align: center; color: white;'>";
           html += "<div style='font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.5rem;'>Nombre total de lettres</div>";
           html += "<div style='font-size: 2.5rem; font-weight: bold;'>" + totalLetters + "</div>";
-          
-          // Display ALL individual letters including duplicates
           html += "<div style='margin-top: 1rem; font-size: 1.2rem; display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; direction: rtl;'>";
           const queryNorm = normalizeForLetterCount(queryInput).replace(/\s+/g, "");
           for (const char of queryNorm) {
             html += "<span style='background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 4px;'>" + char + "</span>";
           }
-          html += "</div>";
-          html += "</div>";
+          html += "</div></div>";
           
-          // Unique letters box
           html += "<div style='flex: 1; min-width: 150px; padding: 1.5rem; background: linear-gradient(135deg, #e67e22 0%, #d35400 100%); border-radius: 8px; text-align: center; color: white;'>";
           html += "<div style='font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.5rem;'>Nombre de lettres différentes</div>";
           html += "<div style='font-size: 2.5rem; font-weight: bold;'>" + data.uniqueLetterCount + "</div>";
-          
-          // Display unique letters
           html += "<div style='margin-top: 1rem; font-size: 1.2rem; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; direction: rtl;'>";
-          
           let uniqueSum = 0;
-          const letterValuesMap = {
-            'ا': 1, 'ب': 2, 'ج': 3, 'د': 4, 'ه': 5, 'و': 6, 'ز': 7, 'ح': 8, 'ط': 9,
-            'ي': 10, 'ك': 20, 'ل': 30, 'م': 40, 'ن': 50, 'ص': 60, 'ع': 70, 'ف': 80, 'ض': 90,
-            'ق': 100, 'ر': 200, 'س': 300, 'ت': 400, 'ث': 500, 'خ': 600, 'ذ': 700, 'ظ': 800, 'غ': 900,
-            'ش': 1000, 'أ': 1, 'إ': 1, 'آ': 1, 'ٱ': 1, 'ة': 5, 'ى': 10, 'ئ': 10, 'ؤ': 6, 'ٰ': 1, 'هـ': 5, 'ء': 1
-          };
-
+          const letterValuesMap = {'ا': 1, 'ب': 2, 'ج': 3, 'د': 4, 'ه': 5, 'و': 6, 'ز': 7, 'ح': 8, 'ط': 9, 'ي': 10, 'ك': 20, 'ل': 30, 'م': 40, 'ن': 50, 'ص': 60, 'ع': 70, 'ف': 80, 'ض': 90, 'ق': 100, 'ر': 200, 'س': 300, 'ت': 400, 'ث': 500, 'خ': 600, 'ذ': 700, 'ظ': 800, 'غ': 900, 'ش': 1000, 'أ': 1, 'إ': 1, 'آ': 1, 'ٱ': 1, 'ة': 5, 'ى': 10, 'ئ': 10, 'ؤ': 6, 'ٰ': 1, 'هـ': 5, 'ء': 1};
           Object.entries(data.letterCounts).forEach(([letter, count]) => {
             if (count > 0) {
               html += "<span style='background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 6px; min-width: 35px;'>" + letter + "</span>";
               uniqueSum += (letterValuesMap[letter] || 0);
             }
           });
-          html += "</div>";
-          
-          // Display total value of unique letters
-          html += "<div style='margin-top: 1rem; font-size: 1.2rem; font-weight: bold;'>Somme des valeurs uniques : " + uniqueSum + "</div>";
-          html += "</div>";
-          html += "</div>";
-          
-          html += "</div>";
+          html += "</div><div style='margin-top: 1rem; font-size: 1.2rem; font-weight: bold;'>Somme des valeurs uniques : " + uniqueSum + "</div></div></div>";
         }
 
         html += \`
@@ -1007,9 +994,7 @@ ${new Date().getTime()}
               "<td style='font-weight: bold;'>" + res.chapterId + "</td>" +
               "<td>" + res.chapterName + "</td>" +
               "<td>" + res.verseId + "</td>" +
-              "<td>" +
-                "<div class='arabic-text'>" + highlightText(res.text, queryInput) + "</div>" +
-              "</td>" +
+              "<td><div class='arabic-text'>" + highlightText(res.text, queryInput) + "</div></td>" +
               "<td style='text-align: center; font-weight: bold; color: var(--primary-color);'>" + res.occurrences + "</td>" +
             "</tr>";
         });
@@ -1025,40 +1010,24 @@ ${new Date().getTime()}
     }
     
     document.getElementById('searchInput').addEventListener('keypress', function (e) {
-      if (e.key === 'Enter') {
-        performSearch();
-      }
+      if (e.key === 'Enter') performSearch();
     });
     
-    // Register Service Worker for offline support
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').then(registration => {
-          console.log('Service Worker registered:', registration);
-        }).catch(error => {
-          console.log('Service Worker registration failed:', error);
-        });
+        navigator.serviceWorker.register('/sw.js');
       });
     }
-
-    // Pre-cache Quran data for offline search
-    async function preCacheQuranData() {
-      try {
-        const cache = await caches.open('quran-data-v1');
-        const response = await fetch('/api/search?q=الله'); // Initial search to cache some data
-        if (response.ok) {
-          await cache.put('/api/search?q=الله', response.clone());
-        }
-      } catch (e) {
-        console.log('Pre-caching failed:', e);
-      }
-    }
-    preCacheQuranData();
   </script>
 </body>
 </html>`);
-    return;
   }
+});
+
+// Helper to watch for QR code changes
+const qrPath = path.join(__dirname, 'public', 'expo-qr.png');
+fs.watch(path.dirname(qrPath), (eventType, filename) => {
+  if (filename === 'expo-qr.png') qrImagePath = '/expo-qr.png';
 });
 
 server.listen(PORT, HOST, () => {
